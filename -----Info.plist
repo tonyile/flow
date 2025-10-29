@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDisplayName</key>
+	<string>时光流水</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>processing</string>
+		<string>fetch</string>
+		<string>background-notification</string>
+	</array>
+	<key>NSUserNotificationsUsageDescription</key>
+	<string>此应用需要发送通知来提醒您的日程安排</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>此应用需要访问本地网络来同步数据</string>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>com.enow.dailyschedule.refresh</string>
+		<string>com.enow.dailyschedule.processing</string>
+	</array>
+</dict>
+</plist>

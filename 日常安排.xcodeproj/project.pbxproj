@@ -7,7 +7,8 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		58D4507E2EA26F63006C49DA /* 日常安排.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "日常安排.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		587213B02EAE437D00EB4CBA /* 时光流水.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "时光流水.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		58D450XX2EA26F63006C49DA /* 日常安排.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "日常安排.entitlements"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -29,28 +30,29 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		587213B12EAE437D00EB4CBA /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				587213B02EAE437D00EB4CBA /* 时光流水.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		58D450752EA26F63006C49DA = {
 			isa = PBXGroup;
 			children = (
 				58D450802EA26F63006C49DA /* 日常安排 */,
-				58D4507F2EA26F63006C49DA /* Products */,
+				58D450XX2EA26F63006C49DA /* 日常安排.entitlements */,
+				587213B12EAE437D00EB4CBA /* Products */,
 			);
-			sourceTree = "<group>";
-		};
-		58D4507F2EA26F63006C49DA /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				58D4507E2EA26F63006C49DA /* 日常安排.app */,
-			);
-			name = Products;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		58D4507D2EA26F63006C49DA /* 日常安排 */ = {
+		58D4507D2EA26F63006C49DA /* 时光流水 */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 58D450892EA26F64006C49DA /* Build configuration list for PBXNativeTarget "日常安排" */;
+			buildConfigurationList = 58D450892EA26F64006C49DA /* Build configuration list for PBXNativeTarget "时光流水" */;
 			buildPhases = (
 				58D4507A2EA26F63006C49DA /* Sources */,
 				58D4507B2EA26F63006C49DA /* Frameworks */,
@@ -63,11 +65,11 @@
 			fileSystemSynchronizedGroups = (
 				58D450802EA26F63006C49DA /* 日常安排 */,
 			);
-			name = "日常安排";
+			name = "时光流水";
 			packageProductDependencies = (
 			);
-			productName = "日常安排";
-			productReference = 58D4507E2EA26F63006C49DA /* 日常安排.app */;
+			productName = "时光流水";
+			productReference = 587213B02EAE437D00EB4CBA /* 时光流水.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -95,11 +97,11 @@
 			mainGroup = 58D450752EA26F63006C49DA;
 			minimizedProjectReferenceProxies = 1;
 			preferredProjectObjectVersion = 77;
-			productRefGroup = 58D4507F2EA26F63006C49DA /* Products */;
+			productRefGroup = 587213B12EAE437D00EB4CBA /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				58D4507D2EA26F63006C49DA /* 日常安排 */,
+				58D4507D2EA26F63006C49DA /* 时光流水 */,
 			);
 		};
 /* End PBXProject section */
@@ -244,12 +246,27 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "日常安排.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 6Z9C5ZBZCU;
 				ENABLE_APP_SANDBOX = YES;
+				ENABLE_INCOMING_NETWORK_CONNECTIONS = NO;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = NO;
 				ENABLE_PREVIEWS = YES;
+				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
+				ENABLE_RESOURCE_ACCESS_BLUETOOTH = NO;
+				ENABLE_RESOURCE_ACCESS_CALENDARS = YES;
+				ENABLE_RESOURCE_ACCESS_CAMERA = NO;
+				ENABLE_RESOURCE_ACCESS_CONTACTS = YES;
+				ENABLE_RESOURCE_ACCESS_LOCATION = YES;
+				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
+				ENABLE_RESOURCE_ACCESS_USB = NO;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "-----Info.plist";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "此应用需要访问您的位置以提供天气信息";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -260,12 +277,12 @@
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "enow.com.----";
+				PRODUCT_BUNDLE_IDENTIFIER = com.enow.dailyschedule.dev016;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
@@ -286,12 +303,27 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "日常安排.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 6Z9C5ZBZCU;
 				ENABLE_APP_SANDBOX = YES;
+				ENABLE_INCOMING_NETWORK_CONNECTIONS = NO;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = NO;
 				ENABLE_PREVIEWS = YES;
+				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
+				ENABLE_RESOURCE_ACCESS_BLUETOOTH = NO;
+				ENABLE_RESOURCE_ACCESS_CALENDARS = YES;
+				ENABLE_RESOURCE_ACCESS_CAMERA = NO;
+				ENABLE_RESOURCE_ACCESS_CONTACTS = YES;
+				ENABLE_RESOURCE_ACCESS_LOCATION = YES;
+				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
+				ENABLE_RESOURCE_ACCESS_USB = NO;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "-----Info.plist";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "此应用需要访问您的位置以提供天气信息";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -302,12 +334,12 @@
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "enow.com.----";
+				PRODUCT_BUNDLE_IDENTIFIER = com.enow.dailyschedule.dev016;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
@@ -335,7 +367,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		58D450892EA26F64006C49DA /* Build configuration list for PBXNativeTarget "日常安排" */ = {
+		58D450892EA26F64006C49DA /* Build configuration list for PBXNativeTarget "时光流水" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				58D4508A2EA26F64006C49DA /* Debug */,

@@ -1,0 +1,349 @@
+import SwiftUI
+import Foundation
+
+struct WeekView: View {
+    @ObservedObject var scheduleStore: ScheduleStore
+    @State private var selectedWeekStart: Date = Date().startOfWeek
+    @State private var showAdd: Bool = false
+    @State private var showCalendar: Bool = false
+    @State private var selectedDateForAdd: Date = Date()
+    @StateObject private var weatherManager = WeatherManager.shared
+    @Binding var currentViewMode: ViewMode // 从父视图接收视图模式绑定
+    
+    init(scheduleStore: ScheduleStore, currentViewMode: Binding<ViewMode>) {
+        self.scheduleStore = scheduleStore
+        self._currentViewMode = currentViewMode
+    }
+    
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 0) {
+                // 周导航栏
+                weekNavigationBar
+                
+                // 周日程列表
+                weekScheduleList
+            }
+            .navigationTitle("")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    VStack(spacing: 2) {
+                        weekTitleView
+                    }
+                }
+                #if os(iOS)
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    HStack(spacing: 8) {
+                        // 添加按钮 - 动感多彩小圆圈
+                        AnimatedPlusButton {
+                            selectedDateForAdd = Date()
+                            showAdd = true
+                        }
+                    }
+                }
+                #else
+                ToolbarItem(placement: .primaryAction) {
+                    HStack(spacing: 8) {
+                        // 添加按钮 - 动感多彩小圆圈
+                        AnimatedPlusButton {
+                            selectedDateForAdd = Date()
+                            showAdd = true
+                        }
+                    }
+                }
+                #endif
+            }
+        }
+        .sheet(isPresented: $showAdd) {
+            AddScheduleView(scheduleStore: scheduleStore, baseDate: selectedDateForAdd)
+        }
+        .sheet(isPresented: $showCalendar) {
+            NavigationView {
+                CustomCalendarView(selectedDate: .constant(selectedWeekStart))
+                    .navigationTitle("选择日期")
+                    #if os(iOS)
+                    .navigationBarTitleDisplayMode(.inline)
+                    #endif
+                    .toolbar {
+                        #if os(iOS)
+                        ToolbarItem(placement: .navigationBarTrailing) {
+                            Button("完成") {
+                                showCalendar = false
+                            }
+                        }
+                        #else
+                        ToolbarItem(placement: .automatic) {
+                            Button("完成") {
+                                showCalendar = false
+                            }
+                        }
+                        #endif
+                    }
+            }
+            .presentationDetents([.medium, .large])
+        }
+        .onAppear {
+            weatherManager.fetchWeather()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("MonthSwitchGesture"))) { notification in
+            // 监听月份切换手势通知
+            if let userInfo = notification.userInfo,
+               let direction = userInfo["direction"] as? Int,
+               let viewType = userInfo["viewType"] as? Int,
+               viewType == 1 { // WeekView对应的tab是1
+                
+                withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
+                    var calendar = Calendar.current
+                    calendar.firstWeekday = 2 // 设置周一为一周的开始
+                    if let newWeekStart = calendar.date(byAdding: .month, value: direction, to: selectedWeekStart) {
+                        selectedWeekStart = newWeekStart.startOfWeek
+                    }
+                }
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("WeekSwitchGesture"))) { notification in
+            if let userInfo = notification.userInfo,
+               let direction = userInfo["direction"] as? Int {
+                
+                withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
+                    var calendar = Calendar.current
+                    calendar.firstWeekday = 2 // 设置周一为一周的开始
+                    if let newWeekStart = calendar.date(byAdding: .weekOfYear, value: direction, to: selectedWeekStart) {
+                        selectedWeekStart = newWeekStart.startOfWeek
+                    }
+                }
+            }
+        }
+    }
+    
+    // MARK: - 周导航栏
+    @ViewBuilder
+    private var weekNavigationBar: some View {
+        HStack(spacing: 16) {
+            ForEach(weekDays, id: \.self) { date in
+                weekDayCell(for: date)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        #if os(iOS)
+        .background(Color(.systemBackground))
+        #else
+        .background(Color(NSColor.controlBackgroundColor))
+        #endif
+        .shadow(color: .gray.opacity(0.1), radius: 1, x: 0, y: 1)
+        .id("week-\(selectedWeekStart.timeIntervalSince1970)")
+        .animation(.spring(response: 0.6, dampingFraction: 0.8, blendDuration: 0.2), value: selectedWeekStart)
+        .gesture(
+            DragGesture()
+                .onEnded { value in
+                    let threshold: CGFloat = 50
+                    if abs(value.translation.width) > threshold {
+                        let direction = value.translation.width > 0 ? -1 : 1 // 向右滑动切换到上一周，向左滑动切换到下一周
+                        
+                        withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
+                            var calendar = Calendar.current
+                            calendar.firstWeekday = 2 // 设置周一为一周的开始
+                            if let newWeekStart = calendar.date(byAdding: .weekOfYear, value: direction, to: selectedWeekStart) {
+                                selectedWeekStart = newWeekStart.startOfWeek
+                            }
+                        }
+                    }
+                }
+        )
+    }
+    
+    @ViewBuilder
+    private func weekDayCell(for date: Date) -> some View {
+        let isToday = Calendar.current.isDateInToday(date)
+        
+        VStack(spacing: 4) {
+            Text(weekdayFormatter.string(from: date))
+                .font(.caption)
+                .foregroundColor(.secondary)
+            
+            Text(dayFormatter.string(from: date))
+                .font(.system(.title3, design: .default, weight: isToday ? .bold : .medium))
+                .foregroundColor(isToday ? .white : .primary)
+                .frame(width: 32, height: 32)
+                .background(
+                    Circle()
+                        .fill(isToday ? Color.accentColor : Color.clear)
+                )
+        }
+        .frame(minWidth: 44)
+        .onTapGesture {
+            selectedDateForAdd = date
+            showAdd = true
+        }
+    }
+    
+    // MARK: - 格式化器
+    private var dayFormatter: DateFormatter {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "d"
+        return formatter
+    }
+    
+    private var weekdayFormatter: DateFormatter {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "E"
+        formatter.locale = Locale(identifier: "zh_CN")
+        return formatter
+    }
+    
+    // MARK: - 周标题视图
+    @ViewBuilder
+    private var weekTitleView: some View {
+        let weekEndDate = Calendar.current.date(byAdding: .day, value: 6, to: selectedWeekStart) ?? selectedWeekStart
+        
+        Text("\(weekTitleFormatter.string(from: selectedWeekStart)) - \(weekTitleFormatter.string(from: weekEndDate))")
+            .font(.system(.title2, design: .default, weight: .semibold))
+            .foregroundColor(.primary)
+    }
+    
+    private var weekTitleFormatter: DateFormatter {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "M月d日"
+        formatter.locale = Locale(identifier: "zh_CN")
+        return formatter
+    }
+    
+    // MARK: - 周日程列表
+    @ViewBuilder
+    private var weekScheduleList: some View {
+        ScrollView {
+            LazyVStack(spacing: 16) {
+                ForEach(weekDays, id: \.self) { date in
+                    weekDaySection(for: date)
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
+        }
+        .safeAreaInset(edge: .bottom) {
+            // 导航栏高度：12(vertical padding) + 32(button height) + 16(bottom padding) + 安全区域 ≈ 80-100
+            Color.clear.frame(height: 100)
+        }
+    }
+    
+    @ViewBuilder
+    private func weekDaySection(for date: Date) -> some View {
+        let items = scheduleStore.schedulesForDate(date)
+        let isToday = Calendar.current.isDateInToday(date)
+        
+        VStack(alignment: .leading, spacing: 8) {
+            // 日期标题
+            HStack {
+                Text(dayHeaderTitle(for: date))
+                    .font(.system(.headline, design: .default, weight: .semibold))
+                    .foregroundColor(isToday ? .accentColor : .primary)
+                
+                if isToday {
+                    Text("今天")
+                        .font(.caption)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(Color.accentColor.opacity(0.1))
+                        .foregroundColor(.accentColor)
+                        .cornerRadius(4)
+                }
+                
+                // 天气显示
+                WeatherDisplayView(date: date, weatherManager: weatherManager, isCompact: true)
+                
+                Spacer()
+                
+                Text("\(items.count)个日程")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            
+            // 日程卡片
+            if items.isEmpty {
+                HStack {
+                    Image(systemName: "calendar")
+                        .foregroundColor(.secondary.opacity(0.6))
+                    Text("暂无日程")
+                        .font(.callout)
+                        .foregroundColor(.secondary.opacity(0.8))
+                    Spacer()
+                }
+                .padding(.vertical, 12)
+                .padding(.horizontal, 16)
+                #if os(iOS)
+                .background(Color(.systemGray6))
+                #else
+                .background(Color(NSColor.quaternaryLabelColor))
+                #endif
+                .cornerRadius(8)
+            } else {
+                ForEach(items, id: \.id) { item in
+                    ScheduleCardView(item: item, scheduleStore: scheduleStore)
+                            .contextMenu {
+                                if item.isRecurring {
+                                    Divider()
+                                    Button {
+                                        withAnimation(.easeInOut(duration: 0.3)) {
+                                        scheduleStore.deleteSingleSchedule(with: item.id)
+                                    }
+                                } label: {
+                                    Label("删除此日程", systemImage: "trash")
+                                }
+                                Button(role: .destructive) {
+                                    withAnimation(.easeInOut(duration: 0.3)) {
+                                        scheduleStore.deleteAllRepeatingSchedules(with: item.id)
+                                    }
+                                } label: {
+                                    Label("删除所有重复日程", systemImage: "trash.fill")
+                                }
+                            } else {
+                                Divider()
+                                Button(role: .destructive) {
+                                    withAnimation(.easeInOut(duration: 0.3)) {
+                                        scheduleStore.deleteSchedules(with: [item.id])
+                                    }
+                                } label: {
+                                    Label("删除日程", systemImage: "trash")
+                                }
+                            }
+                        }
+                }
+            }
+        }
+    }
+    
+    // MARK: - 计算属性和辅助方法
+    private var weekDays: [Date] {
+        var days: [Date] = []
+        let calendar = Calendar.current
+        
+        for i in 0..<7 {
+            if let day = calendar.date(byAdding: .day, value: i, to: selectedWeekStart) {
+                days.append(day)
+            }
+        }
+        
+        return days
+    }
+    
+    private func dayHeaderTitle(for date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "M月d日 EEEE"
+        formatter.locale = Locale(identifier: "zh_CN")
+        return formatter.string(from: date)
+    }
+}
+
+// MARK: - Date Extension
+extension Date {
+    var startOfWeek: Date {
+        var calendar = Calendar.current
+        calendar.firstWeekday = 2 // 设置周一为一周的开始 (1=周日, 2=周一)
+        let components = calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: self)
+        return calendar.date(from: components) ?? self
+    }
+}
