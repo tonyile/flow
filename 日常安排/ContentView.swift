@@ -24,7 +24,7 @@ struct ContentView: View {
             .ignoresSafeArea(.all, edges: .bottom)
 
             CustomTabBar(selectedTab: $selectedTab)
-                .padding(.bottom)
+                .padding(.bottom, 1)
         }
         .environmentObject(colorSchemeManager)
         .ignoresSafeArea(.keyboard)
@@ -43,19 +43,19 @@ struct CustomTabBar: View {
                 } label: {
                     VStack(spacing: 4) {
                         Image(systemName: item.iconName)
-                            .font(.system(size: 22))
+                            .font(.system(size: 24))
                         Text(item.title)
-                            .font(.system(size: 10))
+                            .font(.system(size: 11))
                     }
                 }
                 .foregroundColor(isSelected(item) ? .accentColor : .gray)
                 .frame(maxWidth: .infinity)
             }
         }
-        .frame(height: 50)
+        .frame(height: 55)
         .padding(.horizontal)
         .background(.thinMaterial)
-        .cornerRadius(25)
+        .cornerRadius(28)
         .padding(.horizontal, 20)
     }
 
@@ -72,7 +72,7 @@ enum TabBarItem: Int, CaseIterable {
 
     var title: String {
         switch self {
-        case .time: return "日程"
+        case .time: return "日历"
         case .week: return "周历"
         case .month: return "月历"
         case .flow: return "流水"
