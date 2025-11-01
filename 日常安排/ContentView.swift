@@ -54,7 +54,11 @@ struct CustomTabBar: View {
         }
         .frame(height: 55)
         .padding(.horizontal)
-        .background(.thinMaterial)
+                .background(
+            Rectangle()
+                .foregroundStyle(.ultraThinMaterial)
+                .opacity(1.0)
+        )
         .cornerRadius(28)
         .padding(.horizontal, 20)
     }

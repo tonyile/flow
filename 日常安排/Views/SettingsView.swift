@@ -262,6 +262,23 @@ struct SettingsView: View {
                         }
                     }
                     .foregroundColor(.primary)
+
+                    Button(action: {
+                        showingClearAllAlert = true
+                    }) {
+                        HStack {
+                            ZStack {
+                                Circle()
+                                    .fill(Color.red.opacity(0.15))
+                                    .frame(width: 28, height: 28)
+                                Image(systemName: "trash")
+                                    .font(.system(size: 14, weight: .medium))
+                                    .foregroundColor(.red)
+                            }
+                            Text("清除所有日程")
+                                .foregroundColor(.red)
+                        }
+                    }
                 }
                 .listRowSeparator(.hidden)
                 
@@ -317,23 +334,7 @@ struct SettingsView: View {
                             .fontWeight(.semibold)
                             .foregroundColor(.primary)
                     }
-                    
-                    Button(action: {
-                        showingClearAllAlert = true
-                    }) {
-                        HStack {
-                            ZStack {
-                                Circle()
-                                    .fill(Color.red.opacity(0.15))
-                                    .frame(width: 28, height: 28)
-                                Image(systemName: "trash")
-                                    .font(.system(size: 14, weight: .medium))
-                                    .foregroundColor(.red)
-                            }
-                            Text("清除所有日程")
-                                .foregroundColor(.red)
-                        }
-                    }
+
                 }
                 .listRowSeparator(.hidden)
                 
