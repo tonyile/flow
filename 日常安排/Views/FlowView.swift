@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct FlowView: View {
-    @StateObject private var flowStore = FlowStore.shared
+    @ObservedObject private var flowStore = FlowStore.shared
     @StateObject private var weatherManager = WeatherManager()
     @State private var showingAddFlow = false
     @State private var selectedFlowItem: FlowItem?

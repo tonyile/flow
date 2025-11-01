@@ -79,7 +79,7 @@ struct ScheduleCardView: View {
                                 } else if let weather = scheduleWeather {
                                     HStack(spacing: 4) {
                                         Image(systemName: weather.icon)
-                                            .foregroundColor(.brandPrimary.opacity(0.7))
+                                            .foregroundColor(Color.customBrandPrimary.opacity(0.7))
                                             .font(.caption)
                                         Text("\(weather.temperature)°C")
                                             .font(.caption)

@@ -1,0 +1,142 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project 日常安排.xcodeproj -scheme 时光流水 -destination "platform=iOS Simulator,name=iPhone 17 Pro" build
+
+2025-11-01 10:13:04.383 xcodebuild[20474:9958700] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+ComputePackagePrebuildTargetDependencyGraph
+
+Prepare packages
+
+CreateBuildRequest
+
+SendProjectDescription
+
+CreateBuildOperation
+
+ComputeTargetDependencyGraph
+note: Building targets in dependency order
+note: Target dependency graph (1 target)
+    Target '时光流水' in project '日常安排' (no dependencies)
+
+GatherProvisioningInputs
+
+CreateBuildDescription
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -v -E -dM -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.0.sdk -x c -c /dev/null
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/usr/bin/actool --print-asset-tag-combinations --output-format xml1 /Users/fantast/时光流水/日常安排/Assets.xcassets
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/usr/bin/actool --version --output-format xml1
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc --version
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld -version_details
+
+Build description signature: ac7b887e3b4f4ff2d4b9448fbb26806d
+Build description path: /Users/fantast/Library/Developer/Xcode/DerivedData/Build/Intermediates.noindex/XCBuildData/ac7b887e3b4f4ff2d4b9448fbb26806d.xcbuilddata
+ClangStatCache /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.0.sdk /Users/fantast/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphonesimulator26.0-23A339-26257891a6c027eb51374368541b8346.sdkstatcache
+    cd /Users/fantast/时光流水/日常安排.xcodeproj
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.0.sdk -o /Users/fantast/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphonesimulator26.0-23A339-26257891a6c027eb51374368541b8346.sdkstatcache
+
+ProcessProductPackaging /Users/fantast/时光流水/日常安排.entitlements /Users/fantast/Library/Developer/Xcode/DerivedData/Build/Intermediates.noindex/日常安排.build/Debug-iphonesimulator/时光流水.build/时光流水.app-Simulated.xcent (in target '时光流水' from project '日常安排')
+    cd /Users/fantast/时光流水
+    
+    Entitlements:
+    
+    {
+    "application-identifier" = "6Z9C5ZBZCU.com.enow.dailyschedule.dev016";
+    "com.apple.developer.icloud-container-identifiers" =     (
+        "iCloud.com.enow.dailyschedule.dev016"
+    );
+    "com.apple.developer.icloud-services" =     (
+        CloudKit
+    );
+}
+    
+    builtin-productPackagingUtility /Users/fantast/时光流水/日常安排.entitlements -entitlements -format xml -o /Users/fantast/Library/Developer/Xcode/DerivedData/Build/Intermediates.noindex/日常安排.build/Debug-iphonesimulator/时光流水.build/时光流水.app-Simulated.xcent
+
+ProcessProductPackagingDER /Users/fantast/Library/Developer/Xcode/DerivedData/Build/Intermediates.noindex/日常安排.build/Debug-iphonesimulator/时光流水.build/时光流水.app-Simulated.xcent /Users/fantast/Library/Developer/Xcode/DerivedData/Build/Intermediates.noindex/日常安排.build/Debug-iphonesimulator/时光流水.build/时光流水.app-Simulated.xcent.der (in target '时光流水' from project '日常安排')
+    cd /Users/fantast/时光流水
+    /usr/bin/derq query -f xml -i /Users/fantast/Library/Developer/Xcode/DerivedData/Build/Intermediates.noindex/日常安排.build/Debug-iphonesimulator/时光流水.build/时光流水.app-Simulated.xcent -o /Users/fantast/Library/Developer/Xcode/DerivedData/Build/Intermediates.noindex/日常安排.build/Debug-iphonesimulator/时光流水.build/时光流水.app-Simulated.xcent.der --raw
+
+ProcessProductPackaging /Users/fantast/时光流水/日常安排.entitlements /Users/fantast/Library/Developer/Xcode/DerivedData/Build/Intermediates.noindex/日常安排.build/Debug-iphonesimulator/时光流水.build/时光流水.app.xcent (in target '时光流水' from project '日常安排')
+    cd /Users/fantast/时光流水
+    
+    Entitlements:
+    
+    {
+}
+    
+    builtin-productPackagingUtility /Users/fantast/时光流水/日常安排.entitlements -entitlements -format xml -o /Users/fantast/Library/Developer/Xcode/DerivedData/Build/Intermediates.noindex/日常安排.build/Debug-iphonesimulator/时光流水.build/时光流水.app.xcent
+
+ProcessProductPackagingDER /Users/fantast/Library/Developer/Xcode/DerivedData/Build/Intermediates.noindex/日常安排.build/Debug-iphonesimulator/时光流水.build/时光流水.app.xcent /Users/fantast/Library/Developer/Xcode/DerivedData/Build/Intermediates.noindex/日常安排.build/Debug-iphonesimulator/时光流水.build/时光流水.app.xcent.der (in target '时光流水' from project '日常安排')
+    cd /Users/fantast/时光流水
+    /usr/bin/derq query -f xml -i /Users/fantast/Library/Developer/Xcode/DerivedData/Build/Intermediates.noindex/日常安排.build/Debug-iphonesimulator/时光流水.build/时光流水.app.xcent -o /Users/fantast/Library/Developer/Xcode/DerivedData/Build/Intermediates.noindex/日常安排.build/Debug-iphonesimulator/时光流水.build/时光流水.app.xcent.der --raw
+
+SwiftDriver 时光流水 normal arm64 com.apple.xcode.tools.swift.compiler (in target '时光流水' from project '日常安排')
+    cd /Users/fantast/时光流水
+    builtin-SwiftDriver -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name 时光流水 -Onone -enforce-exclusivity\=checked @/Users/fantast/Library/Developer/Xcode/DerivedData/Build/Intermediates.noindex/日常安排.build/Debug-iphonesimulator/时光流水.build/Objects-normal/arm64/时光流水.SwiftFileList -DDEBUG -default-isolation\=MainActor -enable-bare-slash-regex -enable-upcoming-feature DisableOutwardActorInference -enable-upcoming-feature InferSendableFromCaptures -enable-upcoming-feature GlobalActorIsolatedTypesUsability -enable-upcoming-feature MemberImportVisibility -enable-upcoming-feature InferIsolatedConformances -enable-upcoming-feature NonisolatedNonsendingByDefault -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.0.sdk -target arm64-apple-ios17.6-simulator -g -module-cache-path /Users/fantast/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /Users/fantast/Library/Developer/Xcode/DerivedData/日常安排-effnegqooizojbbkyrzwwqnnewuy/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /Users/fantast/Library/Developer/Xcode/DerivedData/Build/Products/Debug-iphonesimulator -F /Users/fantast/Library/Developer/Xcode/DerivedData/Build/Products/Debug-iphonesimulator -emit-localized-strings -emit-localized-strings-path /Users/fantast/Library/Developer/Xcode/DerivedData/Build/Intermediates.noindex/日常安排.build/Debug-iphonesimulator/时光流水.build/Objects-normal/arm64 -c -j10 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /Users/fantast/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphonesimulator26.0-23A339-26257891a6c027eb51374368541b8346.sdkstatcache -output-file-map /Users/fantast/Library/Developer/Xcode/DerivedData/Build/Intermediates.noindex/日常安排.build/Debug-iphonesimulator/时光流水.build/Objects-normal/arm64/时光流水-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /Users/fantast/Library/Developer/Xcode/DerivedData/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /Users/fantast/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -sdk-module-cache-path /Users/fantast/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /Users/fantast/Library/Developer/Xcode/DerivedData/Build/Intermediates.noindex/日常安排.build/Debug-iphonesimulator/时光流水.build/Objects-normal/arm64/时光流水.swiftmodule -validate-clang-modules-once -clang-build-session-file /Users/fantast/Library/Developer/Xcode/DerivedData/ModuleCache.noindex/Session.modulevalidation -Xcc -I/Users/fantast/Library/Developer/Xcode/DerivedData/Build/Intermediates.noindex/日常安排.build/Debug-iphonesimulator/时光流水.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /Users/fantast/Library/Developer/Xcode/DerivedData/Build/Intermediates.noindex/日常安排.build/Debug-iphonesimulator/时光流水.build/Objects-normal/arm64/时光流水_const_extract_protocols.json -Xcc -iquote -Xcc /Users/fantast/Library/Developer/Xcode/DerivedData/Build/Intermediates.noindex/日常安排.build/Debug-iphonesimulator/时光流水.build/时光流水-generated-files.hmap -Xcc -I/Users/fantast/Library/Developer/Xcode/DerivedData/Build/Intermediates.noindex/日常安排.build/Debug-iphonesimulator/时光流水.build/时光流水-own-target-headers.hmap -Xcc -I/Users/fantast/Library/Developer/Xcode/DerivedData/Build/Intermediates.noindex/日常安排.build/Debug-iphonesimulator/时光流水.build/时光流水-all-target-headers.hmap -Xcc -iquote -Xcc /Users/fantast/Library/Developer/Xcode/DerivedData/Build/Intermediates.noindex/日常安排.build/Debug-iphonesimulator/时光流水.build/时光流水-project-headers.hmap -Xcc -I/Users/fantast/Library/Developer/Xcode/DerivedData/Build/Products/Debug-iphonesimulator/include -Xcc -I/Users/fantast/Library/Developer/Xcode/DerivedData/Build/Intermediates.noindex/日常安排.build/Debug-iphonesimulator/时光流水.build/DerivedSources-normal/arm64 -Xcc -I/Users/fantast/Library/Developer/Xcode/DerivedData/Build/Intermediates.noindex/日常安排.build/Debug-iphonesimulator/时光流水.build/DerivedSources/arm64 -Xcc -I/Users/fantast/Library/Developer/Xcode/DerivedData/Build/Intermediates.noindex/日常安排.build/Debug-iphonesimulator/时光流水.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /Users/fantast/Library/Developer/Xcode/DerivedData/Build/Intermediates.noindex/日常安排.build/Debug-iphonesimulator/时光流水.build/Objects-normal/arm64/时光流水-Swift.h -working-directory /Users/fantast/时光流水 -experimental-emit-module-separately -disable-cmo
+
+SwiftEmitModule normal arm64 Emitting\ module\ for\ 时光流水 (in target '时光流水' from project '日常安排')
+
+EmitSwiftModule normal arm64 (in target '时光流水' from project '日常安排')
+    cd /Users/fantast/时光流水
+    
+
+SwiftCompile normal arm64 Compiling\ ColorSchemeManager.swift /Users/fantast/时光流水/日常安排/Services/ColorSchemeManager.swift (in target '时光流水' from project '日常安排')
+
+SwiftCompile normal arm64 /Users/fantast/时光流水/日常安排/Services/ColorSchemeManager.swift (in target '时光流水' from project '日常安排')
+    cd /Users/fantast/时光流水
+    
+
+SwiftCompile normal arm64 Compiling\ DayView.swift /Users/fantast/时光流水/日常安排/Views/DayView.swift (in target '时光流水' from project '日常安排')
+Failed frontend command:
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swift-frontend -frontend -c /Users/fantast/时光流水/日常安排/Models/FlowItem.swift /Users/fantast/时光流水/日常安排/Models/ScheduleItem.swift /Users/fantast/时光流水/日常安排/Models/ViewMode.swift /Users/fantast/时光流水/日常安排/Services/BackgroundTaskManager.swift /Users/fantast/时光流水/日常安排/Services/ChineseFestivalManager.swift /Users/fantast/时光流水/日常安排/Services/ChineseLunarCalendar.swift /Users/fantast/时光流水/日常安排/Services/CloudKitManager.swift /Users/fantast/时光流水/日常安排/Services/ColorSchemeManager.swift /Users/fantast/时光流水/日常安排/Services/DeviceNotificationHelper.swift /Users/fantast/时光流水/日常安排/Services/FlowStore.swift /Users/fantast/时光流水/日常安排/Services/NotificationManager.swift /Users/fantast/时光流水/日常安排/Services/ScheduleStore.swift /Users/fantast/时光流水/日常安排/Services/WeatherManager.swift /Users/fantast/时光流水/日常安排/Views/Components/AnimatedPlusButton.swift /Users/fantast/时光流水/日常安排/Views/Components/CustomDatePickerView.swift /Users/fantast/时光流水/日常安排/Views/Components/SoundSelectionView.swift /Users/fantast/时光流水/日常安排/Views/AddFlowView.swift /Users/fantast/时光流水/日常安排/Views/AddScheduleView.swift /Users/fantast/时光流水/日常安排/Views/CitySelectionView.swift /Users/fantast/时光流水/日常安排/Views/CustomCalendarView.swift /Users/fantast/时光流水/日常安排/Views/DateDetailView.swift /Users/fantast/时光流水/日常安排/Views/DayCellView.swift -primary-file /Users/fantast/时光流水/日常安排/Views/DayView.swift /Users/fantast/时光流水/日常安排/Views/EditFlowView.swift /Users/fantast/时光流水/日常安排/Views/EditScheduleView.swift /Users/fantast/时光流水/日常安排/Views/FlowView.swift /Users/fantast/时光流水/日常安排/Views/MonthView.swift /Users/fantast/时光流水/日常安排/Views/RegionalGestureView.swift /Users/fantast/时光流水/日常安排/Views/ScheduleCardView.swift /Users/fantast/时光流水/日常安排/Views/ScheduleMergeView.swift /Users/fantast/时光流水/日常安排/Views/SettingsView.swift /Users/fantast/时光流水/日常安排/Views/StatisticsView.swift /Users/fantast/时光流水/日常安排/Views/WeatherDisplayView.swift /Users/fantast/时光流水/日常安排/Views/WeekView.swift /Users/fantast/时光流水/日常安排/____App.swift /Users/fantast/时光流水/日常安排/ContentView.swift /Users/fantast/时光流水/日常安排/UITabBarAppearanceHelper.swift /Users/fantast/Library/Developer/Xcode/DerivedData/Build/Intermediates.noindex/日常安排.build/Debug-iphonesimulator/时光流水.build/DerivedSources/GeneratedAssetSymbols.swift -emit-dependencies-path /Users/fantast/Library/Developer/Xcode/DerivedData/Build/Intermediates.noindex/日常安排.build/Debug-iphonesimulator/时光流水.build/Objects-normal/arm64/DayView.d -emit-const-values-path /Users/fantast/Library/Developer/Xcode/DerivedData/Build/Intermediates.noindex/日常安排.build/Debug-iphonesimulator/时光流水.build/Objects-normal/arm64/DayView.swiftconstvalues -emit-reference-dependencies-path /Users/fantast/Library/Developer/Xcode/DerivedData/Build/Intermediates.noindex/日常安排.build/Debug-iphonesimulator/时光流水.build/Objects-normal/arm64/DayView.swiftdeps -serialize-diagnostics-path /Users/fantast/Library/Developer/Xcode/DerivedData/Build/Intermediates.noindex/日常安排.build/Debug-iphonesimulator/时光流水.build/Objects-normal/arm64/DayView.dia -emit-localized-strings -emit-localized-strings-path /Users/fantast/Library/Developer/Xcode/DerivedData/Build/Intermediates.noindex/日常安排.build/Debug-iphonesimulator/时光流水.build/Objects-normal/arm64 -target arm64-apple-ios17.6-simulator -module-can-import-version DeveloperToolsSupport 23.0.4 23.0.4 -module-can-import-version SwiftUI 7.0.84.1 7.0.84 -module-can-import-version UIKit 9088.1.113 9088.1.113 -load-resolved-plugin /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/swift/host/plugins/libFoundationMacros.dylib\#/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/swift-plugin-server\#FoundationMacros -load-resolved-plugin /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/swift/host/plugins/libObservationMacros.dylib\#/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/swift-plugin-server\#ObservationMacros -load-resolved-plugin /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/swift/host/plugins/libPreviewsMacros.dylib\#/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/swift-plugin-server\#PreviewsMacros -load-resolved-plugin /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/swift/host/plugins/libSwiftMacros.dylib\#/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/swift-plugin-server\#SwiftMacros -load-resolved-plugin /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/swift/host/plugins/libSwiftUIMacros.dylib\#/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/swift-plugin-server\#SwiftUIMacros -disable-implicit-swift-modules -Xcc -fno-implicit-modules -Xcc -fno-implicit-module-maps -explicit-swift-module-map-file /Users/fantast/Library/Developer/Xcode/DerivedData/Build/Intermediates.noindex/日常安排.build/Debug-iphonesimulator/时光流水.build/Objects-normal/arm64/时光流水-dependencies-1.json -Xllvm -aarch64-use-tbi -enable-objc-interop -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.0.sdk -I /Users/fantast/Library/Developer/Xcode/DerivedData/Build/Products/Debug-iphonesimulator -F /Users/fantast/Library/Developer/Xcode/DerivedData/Build/Products/Debug-iphonesimulator -no-color-diagnostics -Xcc -fno-color-diagnostics -enable-testing -g -debug-info-format\=dwarf -dwarf-version\=4 -module-cache-path /Users/fantast/Library/Developer/Xcode/DerivedData/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -swift-version 5 -enforce-exclusivity\=checked -Onone -D DEBUG -serialize-debugging-options -const-gather-protocols-file /Users/fantast/Library/Developer/Xcode/DerivedData/Build/Intermediates.noindex/日常安排.build/Debug-iphonesimulator/时光流水.build/Objects-normal/arm64/时光流水_const_extract_protocols.json -enable-upcoming-feature DisableOutwardActorInference -enable-upcoming-feature InferSendableFromCaptures -enable-upcoming-feature GlobalActorIsolatedTypesUsability -enable-upcoming-feature MemberImportVisibility -enable-upcoming-feature InferIsolatedConformances -enable-upcoming-feature NonisolatedNonsendingByDefault -enable-experimental-feature DebugDescriptionMacro -enable-bare-slash-regex -default-isolation\=MainActor -empty-abi-descriptor -validate-clang-modules-once -clang-build-session-file /Users/fantast/Library/Developer/Xcode/DerivedData/ModuleCache.noindex/Session.modulevalidation -Xcc -working-directory -Xcc /Users/fantast/时光流水 -enable-anonymous-context-mangled-names -file-compilation-dir /Users/fantast/时光流水 -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -Xcc -ivfsstatcache -Xcc /Users/fantast/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphonesimulator26.0-23A339-26257891a6c027eb51374368541b8346.sdkstatcache -Xcc -I/Users/fantast/Library/Developer/Xcode/DerivedData/Build/Intermediates.noindex/日常安排.build/Debug-iphonesimulator/时光流水.build/swift-overrides.hmap -Xcc -iquote -Xcc /Users/fantast/Library/Developer/Xcode/DerivedData/Build/Intermediates.noindex/日常安排.build/Debug-iphonesimulator/时光流水.build/时光流水-generated-files.hmap -Xcc -I/Users/fantast/Library/Developer/Xcode/DerivedData/Build/Intermediates.noindex/日常安排.build/Debug-iphonesimulator/时光流水.build/时光流水-own-target-headers.hmap -Xcc -I/Users/fantast/Library/Developer/Xcode/DerivedData/Build/Intermediates.noindex/日常安排.build/Debug-iphonesimulator/时光流水.build/时光流水-all-target-headers.hmap -Xcc -iquote -Xcc /Users/fantast/Library/Developer/Xcode/DerivedData/Build/Intermediates.noindex/日常安排.build/Debug-iphonesimulator/时光流水.build/时光流水-project-headers.hmap -Xcc -I/Users/fantast/Library/Developer/Xcode/DerivedData/Build/Products/Debug-iphonesimulator/include -Xcc -I/Users/fantast/Library/Developer/Xcode/DerivedData/Build/Intermediates.noindex/日常安排.build/Debug-iphonesimulator/时光流水.build/DerivedSources-normal/arm64 -Xcc -I/Users/fantast/Library/Developer/Xcode/DerivedData/Build/Intermediates.noindex/日常安排.build/Debug-iphonesimulator/时光流水.build/DerivedSources/arm64 -Xcc -I/Users/fantast/Library/Developer/Xcode/DerivedData/Build/Intermediates.noindex/日常安排.build/Debug-iphonesimulator/时光流水.build/DerivedSources -Xcc -DDEBUG\=1 -no-auto-bridging-header-chaining -module-name 时光流水 -frontend-parseable-output -disable-clang-spi -target-sdk-version 26.0 -target-sdk-name iphonesimulator26.0 -clang-target arm64-apple-ios26.0-simulator -in-process-plugin-server-path /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/libSwiftInProcPluginServer.dylib -o /Users/fantast/Library/Developer/Xcode/DerivedData/Build/Intermediates.noindex/日常安排.build/Debug-iphonesimulator/时光流水.build/Objects-normal/arm64/DayView.o -index-unit-output-path /日常安排.build/Debug-iphonesimulator/时光流水.build/Objects-normal/arm64/DayView.o -index-store-path /Users/fantast/Library/Developer/Xcode/DerivedData/日常安排-effnegqooizojbbkyrzwwqnnewuy/Index.noindex/DataStore -index-system-modules
+
+SwiftCompile normal arm64 /Users/fantast/时光流水/日常安排/Views/DayView.swift (in target '时光流水' from project '日常安排')
+    cd /Users/fantast/时光流水
+    
+/Users/fantast/时光流水/日常安排/Views/DayView.swift:300:43: error: value of type 'ColorSchemeManager' has no dynamic member 'accentColor' using key path from root type 'ColorSchemeManager'
+                return colorSchemeManager.accentColor
+                       ~~~~~~~~~~~~~~~~~~ ^~~~~~~~~~~
+/Users/fantast/时光流水/日常安排/Views/DayView.swift:300:24: error: referencing subscript 'subscript(dynamicMember:)' requires wrapper 'ObservedObject<ColorSchemeManager>.Wrapper'
+                return colorSchemeManager.accentColor
+                       ^
+                       $
+/Users/fantast/时光流水/日常安排/Views/DayView.swift:300:43: error: cannot convert return expression of type 'Binding<_>' to return type 'Color'
+                return colorSchemeManager.accentColor
+                       ~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~
+
+SwiftDriverJobDiscovery normal arm64 Compiling ColorSchemeManager.swift (in target '时光流水' from project '日常安排')
+
+SwiftCompile normal arm64 Compiling\ ____App.swift /Users/fantast/时光流水/日常安排/____App.swift (in target '时光流水' from project '日常安排')
+
+SwiftCompile normal arm64 /Users/fantast/时光流水/日常安排/____App.swift (in target '时光流水' from project '日常安排')
+    cd /Users/fantast/时光流水
+    
+
+SwiftCompile normal arm64 Compiling\ ContentView.swift /Users/fantast/时光流水/日常安排/ContentView.swift (in target '时光流水' from project '日常安排')
+
+SwiftCompile normal arm64 /Users/fantast/时光流水/日常安排/ContentView.swift (in target '时光流水' from project '日常安排')
+    cd /Users/fantast/时光流水
+    
+
+SwiftCompile normal arm64 Compiling\ WeekView.swift /Users/fantast/时光流水/日常安排/Views/WeekView.swift (in target '时光流水' from project '日常安排')
+
+SwiftCompile normal arm64 /Users/fantast/时光流水/日常安排/Views/WeekView.swift (in target '时光流水' from project '日常安排')
+    cd /Users/fantast/时光流水
+    
+
+SwiftCompile normal arm64 Compiling\ MonthView.swift /Users/fantast/时光流水/日常安排/Views/MonthView.swift (in target '时光流水' from project '日常安排')
+
+SwiftCompile normal arm64 /Users/fantast/时光流水/日常安排/Views/MonthView.swift (in target '时光流水' from project '日常安排')
+    cd /Users/fantast/时光流水
+    
+
+** BUILD FAILED **
+
+
+The following build commands failed:
+	SwiftCompile normal arm64 Compiling\ DayView.swift /Users/fantast/时光流水/日常安排/Views/DayView.swift (in target '时光流水' from project '日常安排')
+	SwiftCompile normal arm64 /Users/fantast/时光流水/日常安排/Views/DayView.swift (in target '时光流水' from project '日常安排')
+	Building project 日常安排 with scheme 时光流水
+(3 failures)

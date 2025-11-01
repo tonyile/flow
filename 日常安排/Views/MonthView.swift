@@ -155,6 +155,7 @@ class CalendarDataManager: ObservableObject {
 }
 
 struct MonthView: View {
+    @EnvironmentObject var colorSchemeManager: ColorSchemeManager
     @ObservedObject var scheduleStore: ScheduleStore
     @ObservedObject var weatherManager = WeatherManager.shared
     @StateObject private var calendarManager = CalendarDataManager()
@@ -198,12 +199,12 @@ struct MonthView: View {
             // 公历月份
             Text(monthFormatter.string(from: currentMonth))
                 .font(.system(.title2, design: .default, weight: .semibold))
-                .foregroundColor(.primary)
+                .foregroundColor(colorSchemeManager.primary)
             
             // 农历信息
             Text("(\(lunarInfo.month)月)")
                 .font(.system(.caption2, design: .default, weight: .medium))
-                .foregroundColor(.secondary)
+                .foregroundColor(colorSchemeManager.secondary)
             
             // 忆年信息（如果有）
             if let festival = festival {
@@ -232,16 +233,16 @@ struct MonthView: View {
     private func festivalTextColor(for type: ChineseFestivalType, festivalName: String = "") -> Color {
         switch type {
         case .lunar:
-            return .orange
+            return colorSchemeManager.lunarFestivalColor
         case .solar:
             let legalHolidays = ["元旦", "劳动节", "国庆节"]
             if legalHolidays.contains(festivalName) {
-                return .red
+                return colorSchemeManager.legalHolidayColor
             } else {
-                return .blue
+                return colorSchemeManager.blue
             }
         case .solarTerm:
-            return .green
+            return colorSchemeManager.solarTermColor
         }
     }
 
@@ -271,7 +272,7 @@ struct MonthView: View {
                     } label: {
                         Text(monthFormatter.string(from: currentMonth))
                             .font(.system(.title2, design: .default, weight: .semibold))
-                            .foregroundColor(.primary)
+                            .foregroundColor(colorSchemeManager.primary)
                     }
                 }
                 ToolbarItem(placement: .automatic) {
@@ -360,7 +361,7 @@ struct MonthView: View {
             ForEach(["一", "二", "三", "四", "五", "六", "日"], id: \.self) { weekday in
                 Text(weekday)
                     .font(.system(size: 18, weight: .semibold))  // 增加字体大小从17到18
-                    .foregroundColor(.secondary)
+                    .foregroundColor(colorSchemeManager.secondary)
                     .frame(maxWidth: .infinity)
             }
         }

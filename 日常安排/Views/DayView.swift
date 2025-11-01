@@ -9,6 +9,7 @@ struct DayView: View {
     @State private var showEditView: Bool = false
     @State private var editingItem: ScheduleItem?
     @StateObject private var weatherManager = WeatherManager.shared
+    @EnvironmentObject var colorSchemeManager: ColorSchemeManager
     @Binding var currentViewMode: ViewMode // 从父视图接收视图模式绑定
     
     init(scheduleStore: ScheduleStore, currentViewMode: Binding<ViewMode>) {
@@ -52,12 +53,12 @@ struct DayView: View {
                                     Text(currentViewMode.title)
                                         .font(.system(size: 14, weight: .medium))
                                 }
-                                .foregroundColor(.accentColor)
+                                .foregroundColor(colorSchemeManager.accent)
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 4)
                                 .background(
                                     RoundedRectangle(cornerRadius: 8)
-                                        .fill(Color.accentColor.opacity(0.1))
+                                        .fill(colorSchemeManager.accent.opacity(0.1))
                                 )
                             }
                         }
@@ -135,7 +136,7 @@ struct DayView: View {
             VStack(spacing: 12) {
                 Image(systemName: "calendar.badge.exclamationmark").font(.largeTitle)
                 Text("今日暂无日程")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(colorSchemeManager.secondary)
             }.frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
             List {
@@ -256,18 +257,18 @@ struct DayView: View {
             // 主日期 - 统一使用与其他页面一致的字体样式
             Text(baseTitle)
                 .font(.system(.title2, design: .default, weight: .semibold))
-                .foregroundColor(.primary)
+                .foregroundColor(colorSchemeManager.primary)
             
             // 农历信息
             Text(lunarTitle)
                 .font(.system(.caption2, design: .default, weight: .medium))
-                .foregroundColor(.secondary)
+                .foregroundColor(colorSchemeManager.secondary)
             
             // 忆年信息 - 保持与MonthView一致的样式
             if let festival = festival {
                 Text(festival.name)
                     .font(.system(.caption2, design: .default, weight: .medium))
-                    .foregroundColor(.white)
+                    .foregroundColor(colorSchemeManager.primary)
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
                     .background(
@@ -290,17 +291,16 @@ struct DayView: View {
     private func festivalTextColor(for type: ChineseFestivalType, festivalName: String = "") -> Color {
         switch type {
         case .lunar:
-            return .orange  // 传统节假日使用温暖的橙色
+            return colorSchemeManager.lunarFestivalColor
         case .solar:
-            // 区分法定假日和普通公历忆年
             let legalHolidays = ["元旦", "劳动节", "国庆节"]
             if legalHolidays.contains(festivalName) {
-                return .red  // 法定假日使用醒目的红色
+                return colorSchemeManager.legalHolidayColor
             } else {
-                return .accentColor  // 其他公历忆年使用品牌色（蓝色）
+                return colorSchemeManager.accent // Corresponds to Color.accentColor
             }
         case .solarTerm:
-            return .green.opacity(0.8)  // 节气使用浅绿色，弱化颜色强调信息性
+            return colorSchemeManager.solarTermColor
         }
     }
 }

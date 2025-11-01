@@ -300,6 +300,38 @@ struct ScheduleItem: Identifiable, Codable {
     }
 }
 
+// MARK: - Equatable Conformance
+extension ScheduleItem: Equatable {
+    static func == (lhs: ScheduleItem, rhs: ScheduleItem) -> Bool {
+        lhs.id == rhs.id &&
+        lhs.title == rhs.title &&
+        lhs.notes == rhs.notes &&
+        lhs.category == rhs.category &&
+        lhs.priority == rhs.priority &&
+        lhs.startTime == rhs.startTime &&
+        lhs.endTime == rhs.endTime &&
+        lhs.isCompleted == rhs.isCompleted &&
+        lhs.isRecurring == rhs.isRecurring &&
+        lhs.recurringStartDate == rhs.recurringStartDate &&
+        lhs.recurringEndDate == rhs.recurringEndDate &&
+        lhs.recurringWeekdays == rhs.recurringWeekdays &&
+        lhs.isFestival == rhs.isFestival &&
+        lhs.festivalType == rhs.festivalType &&
+        lhs.isYearlyRecurring == rhs.isYearlyRecurring &&
+        lhs.parentId == rhs.parentId &&
+        lhs.hasReminder == rhs.hasReminder &&
+        lhs.reminderTime == rhs.reminderTime &&
+        lhs.reminderMinutesBefore == rhs.reminderMinutesBefore &&
+        lhs.notificationId == rhs.notificationId &&
+        lhs.reminderSound == rhs.reminderSound &&
+        lhs.customSoundURL == rhs.customSoundURL &&
+        lhs.city == rhs.city &&
+        lhs.recordName == rhs.recordName &&
+        lhs.modifiedDate == rhs.modifiedDate &&
+        lhs.isDeleted == rhs.isDeleted
+    }
+}
+
 // MARK: - CloudKit Extensions
 extension ScheduleItem {
     // 转换为CloudKit记录

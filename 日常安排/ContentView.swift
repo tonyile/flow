@@ -1,15 +1,9 @@
 import SwiftUI
 
-// 品牌色彩定义
-extension Color {
-    static let brandPrimary = Color(red: 0.0, green: 0.48, blue: 1.0) // 鲜明的蓝色作为品牌主色
-    static let brandSecondary = Color(red: 0.0, green: 0.78, blue: 0.32) // 活力绿色作为辅助色
-    static let brandAccent = Color(red: 1.0, green: 0.58, blue: 0.0) // 温暖橙色作为强调色
-}
-
 struct ContentView: View {
     @ObservedObject var scheduleStore: ScheduleStore
     @StateObject private var flowStore = FlowStore.shared
+    @EnvironmentObject var colorSchemeManager: ColorSchemeManager
     @State private var selectedTab = 0
     @State private var selectedDate = Date()
     @State private var showingAddSchedule = false
@@ -146,24 +140,11 @@ struct ContentView: View {
             .padding(.bottom, 6)
             .padding(.vertical, 4)
             .background(
-                RoundedRectangle(cornerRadius: 24)
-                    .fill(
-                        LinearGradient(
-                            gradient: Gradient(colors: [
-                                Color.brandPrimary.opacity(0.3),     // 柔和蓝色
-                                Color.brandSecondary.opacity(0.25),  // 柔和绿色
-                                Color.brandAccent.opacity(0.3),      // 柔和橙色
-                                Color.purple.opacity(0.2)            // 柔和紫色
-                            ]),
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 24)
-                            .fill(.ultraThinMaterial)
-                            .opacity(0.15)
-                    )
+                LinearGradient(
+                    gradient: Gradient(colors: [Color.customBrandPrimary.opacity(0.3), Color.customBrandSecondary.opacity(0.3)]),
+                    startPoint: .leading,
+                    endPoint: .trailing
+                ).clipShape(Capsule())
             )
             .padding(.horizontal, 20)
         }
@@ -180,6 +161,7 @@ struct TabBarButton: View {
     let action: () -> Void
     let isDropIcon: Bool
     @State private var dropOffset: CGFloat = 0
+    @EnvironmentObject var colorSchemeManager: ColorSchemeManager
     
     init(icon: String, title: String, isSelected: Bool, action: @escaping () -> Void, isDropIcon: Bool = false) {
         self.icon = icon
@@ -196,7 +178,7 @@ struct TabBarButton: View {
                     if isSelected {
                         // 选中状态的背景
                         RoundedRectangle(cornerRadius: 16)
-                            .fill(Color.brandPrimary.opacity(0.15))
+                            .fill(Color.customBrandPrimary.opacity(0.15))
                             .frame(width: 56, height: 32)
                             .scaleEffect(1.0)
                             .animation(.spring(response: 0.4, dampingFraction: 0.7), value: isSelected)
@@ -208,8 +190,8 @@ struct TabBarButton: View {
                             .fill(
                                 RadialGradient(
                                     gradient: Gradient(colors: [
-                                        Color.blue.opacity(0.3),
-                                        Color.blue.opacity(0.1),
+                                        Color.customBrandPrimary.opacity(0.3),
+                                        Color.customBrandPrimary.opacity(0.1),
                                         Color.clear
                                     ]),
                                     center: .center,
@@ -235,7 +217,7 @@ struct TabBarButton: View {
                     Image(systemName: icon)
                         .font(.system(size: 18, weight: .medium))
                         .foregroundColor(
-                            isSelected ? .brandPrimary : 
+                            isSelected ? .customBrandPrimary : 
                             (isDropIcon ? Color.blue.opacity(0.8) : Color.gray.opacity(0.7))
                         )
                         .frame(height: 18)
@@ -245,8 +227,11 @@ struct TabBarButton: View {
                 }
                 
                 Text(title)
-                    .font(.system(size: 9, weight: .medium))
-                    .foregroundColor(isSelected ? .brandPrimary : Color.gray.opacity(0.7))
+                    .font(.system(size: 10, weight: .regular))
+                    .foregroundColor(
+                        isSelected ? .customBrandPrimary : 
+                        (isDropIcon ? Color.blue.opacity(0.8) : Color.gray.opacity(0.7))
+                    )
                     .animation(.easeInOut(duration: 0.2), value: isSelected)
             }
             .frame(maxWidth: .infinity)

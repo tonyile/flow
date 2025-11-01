@@ -10,6 +10,7 @@ struct DayCellView: View {
     let onTap: () -> Void
     let onLongPress: () -> Void
     
+    @EnvironmentObject var colorSchemeManager: ColorSchemeManager
     @State private var dayWeather: WeatherInfo?
     @State private var isLoadingWeather = false
     @State private var weatherTask: Task<Void, Never>?
@@ -42,7 +43,7 @@ struct DayCellView: View {
                     } else {
                         Text(lunarInfo.shortDisplay)
                             .font(.system(size: 10, weight: .regular))  // 调大字号从8到10
-                            .foregroundColor(Color.secondary.opacity(0.7))  // 使用更浅的灰色
+                            .foregroundColor(colorSchemeManager.secondary.opacity(0.7))  // 使用更浅的灰色
                             .lineLimit(1)
                     }
                 }
@@ -52,10 +53,10 @@ struct DayCellView: View {
                     HStack(spacing: 1) {
                         Image(systemName: weather.icon)
                             .font(.system(size: 10))  // 调大图标从8到10
-                            .foregroundColor(Color.secondary.opacity(0.7))  // 使用浅灰色
+                            .foregroundColor(colorSchemeManager.secondary.opacity(0.7))  // 使用浅灰色
                         Text("\(weather.temperature)°")
                             .font(.system(size: 10, weight: .regular))  // 调大字号从8到10
-                            .foregroundColor(Color.secondary.opacity(0.7))  // 使用浅灰色
+                            .foregroundColor(colorSchemeManager.secondary.opacity(0.7))  // 使用浅灰色
                     }
                 } else if isLoadingWeather {
                     ProgressView()
@@ -74,7 +75,7 @@ struct DayCellView: View {
                         if daySchedules.count > 3 {
                             Text("...")
                                 .font(.system(size: 6, weight: .medium))  // 缩小字体从8到6
-                                .foregroundColor(.secondary)
+                                .foregroundColor(colorSchemeManager.secondary)
                         }
                     }
                     .frame(maxWidth: .infinity)  // 确保水平居中
@@ -116,21 +117,21 @@ struct DayCellView: View {
     
     private var textColor: Color {
         if !isCurrentMonth {
-            return .secondary.opacity(0.5)
+            return colorSchemeManager.secondary.opacity(0.5)
         } else if isSelected {
-            return .white
+            return colorSchemeManager.accentForegroundColor
         } else if isToday {
-            return .primary
+            return colorSchemeManager.primary
         } else {
-            return .primary
+            return colorSchemeManager.primary
         }
     }
     
     private var backgroundColor: Color {
         if isSelected {
-            return .accentColor
+            return colorSchemeManager.accent
         } else if isToday {
-            return .accentColor.opacity(0.1)
+            return colorSchemeManager.accent.opacity(0.1)
         } else {
             return .clear
         }
@@ -138,7 +139,7 @@ struct DayCellView: View {
     
     private var borderColor: Color {
         if isSelected {
-            return .accentColor
+            return colorSchemeManager.accent
         } else {
             return .clear
         }
@@ -147,17 +148,17 @@ struct DayCellView: View {
     private func festivalColor(for type: ChineseFestivalType, festivalName: String = "") -> Color {
         switch type {
         case .lunar:
-            return .orange.opacity(0.8)  // 传统节假日使用温暖的橙色
+            return colorSchemeManager.lunarFestivalColor.opacity(0.8)  // 传统节假日使用温暖的橙色
         case .solar:
             // 区分法定假日和普通公历忆年
             let legalHolidays = ["元旦", "劳动节", "国庆节"]
             if legalHolidays.contains(festivalName) {
-                return .red.opacity(0.9)  // 法定假日使用醒目的红色
+                return colorSchemeManager.legalHolidayColor.opacity(0.9)  // 法定假日使用醒目的红色
             } else {
-                return .accentColor.opacity(0.8)  // 其他公历忆年使用品牌色（蓝色）
+                return colorSchemeManager.accent.opacity(0.8)  // 其他公历忆年使用品牌色（蓝色）
             }
         case .solarTerm:
-            return .green.opacity(0.6)  // 节气使用浅绿色，弱化颜色强调信息性
+            return colorSchemeManager.solarTermColor  // 节气使用浅绿色，弱化颜色强调信息性
         }
     }
     

@@ -10,6 +10,7 @@ struct TimeFlowApp: App {
     @StateObject private var notificationManager = NotificationManager.shared
     @StateObject private var cloudKitManager = CloudKitManager.shared
     @StateObject private var backgroundTaskManager = BackgroundTaskManager.shared
+    @StateObject private var colorSchemeManager = ColorSchemeManager.shared
     
     // 保持对通知代理的强引用
     private let notificationDelegate = NotificationDelegate()
@@ -29,6 +30,7 @@ struct TimeFlowApp: App {
                 .environmentObject(notificationManager)
                 .environmentObject(cloudKitManager)
                 .environmentObject(backgroundTaskManager)
+                .environmentObject(colorSchemeManager)
                 .environment(\.locale, Locale(identifier: "zh-Hans"))
                 .onAppear {
                     // 注册后台任务

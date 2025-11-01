@@ -3,6 +3,7 @@ import Foundation
 
 struct WeekView: View {
     @ObservedObject var scheduleStore: ScheduleStore
+    @EnvironmentObject var colorSchemeManager: ColorSchemeManager
     @State private var selectedWeekStart: Date = Date().startOfWeek
     @State private var showAdd: Bool = false
     @State private var showCalendar: Bool = false
@@ -130,11 +131,11 @@ struct WeekView: View {
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
         #if os(iOS)
-        .background(Color(.systemBackground))
+        .background(colorSchemeManager.background)
         #else
-        .background(Color(NSColor.controlBackgroundColor))
+        .background(colorSchemeManager.background)
         #endif
-        .shadow(color: .gray.opacity(0.1), radius: 1, x: 0, y: 1)
+        .shadow(color: colorSchemeManager.secondary.opacity(0.1), radius: 1, x: 0, y: 1)
         .id("week-\(selectedWeekStart.timeIntervalSince1970)")
         .animation(.spring(response: 0.6, dampingFraction: 0.8, blendDuration: 0.2), value: selectedWeekStart)
         .gesture(
@@ -163,15 +164,15 @@ struct WeekView: View {
         VStack(spacing: 4) {
             Text(weekdayFormatter.string(from: date))
                 .font(.caption)
-                .foregroundColor(.secondary)
+                .foregroundColor(colorSchemeManager.secondary)
             
             Text(dayFormatter.string(from: date))
                 .font(.system(.title3, design: .default, weight: isToday ? .bold : .medium))
-                .foregroundColor(isToday ? .white : .primary)
+                .foregroundColor(isToday ? .white : colorSchemeManager.primary)
                 .frame(width: 32, height: 32)
                 .background(
                     Circle()
-                        .fill(isToday ? Color.accentColor : Color.clear)
+                        .fill(isToday ? colorSchemeManager.accent : Color.clear)
                 )
         }
         .frame(minWidth: 44)
@@ -202,7 +203,7 @@ struct WeekView: View {
         
         Text("\(weekTitleFormatter.string(from: selectedWeekStart)) - \(weekTitleFormatter.string(from: weekEndDate))")
             .font(.system(.title2, design: .default, weight: .semibold))
-            .foregroundColor(.primary)
+            .foregroundColor(colorSchemeManager.primary)
     }
     
     private var weekTitleFormatter: DateFormatter {
@@ -240,15 +241,15 @@ struct WeekView: View {
             HStack {
                 Text(dayHeaderTitle(for: date))
                     .font(.system(.headline, design: .default, weight: .semibold))
-                    .foregroundColor(isToday ? .accentColor : .primary)
+                    .foregroundColor(isToday ? colorSchemeManager.accent : colorSchemeManager.primary)
                 
                 if isToday {
                     Text("今天")
                         .font(.caption)
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
-                        .background(Color.accentColor.opacity(0.1))
-                        .foregroundColor(.accentColor)
+                        .background(colorSchemeManager.accent.opacity(0.1))
+                        .foregroundColor(colorSchemeManager.accent)
                         .cornerRadius(4)
                 }
                 
@@ -259,25 +260,25 @@ struct WeekView: View {
                 
                 Text("\(items.count)个日程")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(colorSchemeManager.secondary)
             }
             
             // 日程卡片
             if items.isEmpty {
                 HStack {
                     Image(systemName: "calendar")
-                        .foregroundColor(.secondary.opacity(0.6))
+                        .foregroundColor(colorSchemeManager.secondary.opacity(0.6))
                     Text("暂无日程")
                         .font(.callout)
-                        .foregroundColor(.secondary.opacity(0.8))
+                        .foregroundColor(colorSchemeManager.secondary.opacity(0.8))
                     Spacer()
                 }
                 .padding(.vertical, 12)
                 .padding(.horizontal, 16)
                 #if os(iOS)
-                .background(Color(.systemGray6))
+                .background(colorSchemeManager.secondaryBackground)
                 #else
-                .background(Color(NSColor.quaternaryLabelColor))
+                .background(colorSchemeManager.secondaryBackground)
                 #endif
                 .cornerRadius(8)
             } else {
