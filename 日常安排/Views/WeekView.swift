@@ -222,7 +222,7 @@ struct WeekView: View {
                     weekDaySection(for: date)
                 }
             }
-            .padding(.horizontal, 16)
+            .padding(.horizontal, 32)
             .padding(.vertical, 8)
         }
         .safeAreaInset(edge: .bottom) {
