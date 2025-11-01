@@ -9,13 +9,7 @@ struct WeekView: View {
     @State private var showCalendar: Bool = false
     @State private var selectedDateForAdd: Date = Date()
     @StateObject private var weatherManager = WeatherManager.shared
-    @Binding var currentViewMode: ViewMode // 从父视图接收视图模式绑定
-    
-    init(scheduleStore: ScheduleStore, currentViewMode: Binding<ViewMode>) {
-        self.scheduleStore = scheduleStore
-        self._currentViewMode = currentViewMode
-    }
-    
+
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
@@ -89,37 +83,8 @@ struct WeekView: View {
         .onAppear {
             weatherManager.fetchWeather()
         }
-        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("MonthSwitchGesture"))) { notification in
-            // 监听月份切换手势通知
-            if let userInfo = notification.userInfo,
-               let direction = userInfo["direction"] as? Int,
-               let viewType = userInfo["viewType"] as? Int,
-               viewType == 1 { // WeekView对应的tab是1
-                
-                withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
-                    var calendar = Calendar.current
-                    calendar.firstWeekday = 2 // 设置周一为一周的开始
-                    if let newWeekStart = calendar.date(byAdding: .month, value: direction, to: selectedWeekStart) {
-                        selectedWeekStart = newWeekStart.startOfWeek
-                    }
-                }
-            }
-        }
-        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("WeekSwitchGesture"))) { notification in
-            if let userInfo = notification.userInfo,
-               let direction = userInfo["direction"] as? Int {
-                
-                withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
-                    var calendar = Calendar.current
-                    calendar.firstWeekday = 2 // 设置周一为一周的开始
-                    if let newWeekStart = calendar.date(byAdding: .weekOfYear, value: direction, to: selectedWeekStart) {
-                        selectedWeekStart = newWeekStart.startOfWeek
-                    }
-                }
-            }
-        }
     }
-    
+
     // MARK: - 周导航栏
     @ViewBuilder
     private var weekNavigationBar: some View {
@@ -138,25 +103,8 @@ struct WeekView: View {
         .shadow(color: colorSchemeManager.secondary.opacity(0.1), radius: 1, x: 0, y: 1)
         .id("week-\(selectedWeekStart.timeIntervalSince1970)")
         .animation(.spring(response: 0.6, dampingFraction: 0.8, blendDuration: 0.2), value: selectedWeekStart)
-        .gesture(
-            DragGesture()
-                .onEnded { value in
-                    let threshold: CGFloat = 50
-                    if abs(value.translation.width) > threshold {
-                        let direction = value.translation.width > 0 ? -1 : 1 // 向右滑动切换到上一周，向左滑动切换到下一周
-                        
-                        withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
-                            var calendar = Calendar.current
-                            calendar.firstWeekday = 2 // 设置周一为一周的开始
-                            if let newWeekStart = calendar.date(byAdding: .weekOfYear, value: direction, to: selectedWeekStart) {
-                                selectedWeekStart = newWeekStart.startOfWeek
-                            }
-                        }
-                    }
-                }
-        )
     }
-    
+
     @ViewBuilder
     private func weekDayCell(for date: Date) -> some View {
         let isToday = Calendar.current.isDateInToday(date)

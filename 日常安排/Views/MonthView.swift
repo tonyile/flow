@@ -159,7 +159,6 @@ struct MonthView: View {
     @ObservedObject var scheduleStore: ScheduleStore
     @ObservedObject var weatherManager = WeatherManager.shared
     @StateObject private var calendarManager = CalendarDataManager()
-    @Binding var currentViewMode: ViewMode
     
     @State private var currentMonth: Date = .now
     @State private var selectedDate: Date?
@@ -175,12 +174,7 @@ struct MonthView: View {
         case single
         case allRepeating
     }
-    
-    init(scheduleStore: ScheduleStore, currentViewMode: Binding<ViewMode>) {
-        self.scheduleStore = scheduleStore
-        self._currentViewMode = currentViewMode
-    }
-    
+
     // 月份标题格式器
     private let monthFormatter: DateFormatter = {
         let df = DateFormatter()
@@ -340,18 +334,6 @@ struct MonthView: View {
         .onChange(of: currentMonth) { oldValue, newValue in
             calendarManager.updateMonth(newValue)
         }
-        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("MonthSwitchGesture"))) { notification in
-            // 监听月份切换手势通知
-            if let userInfo = notification.userInfo,
-               let direction = userInfo["direction"] as? Int,
-               let viewType = userInfo["viewType"] as? Int,
-               viewType == 2 { // MonthView对应的tab是2
-                
-                withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
-                    shiftMonth(direction)
-                }
-            }
-        }
     }
     
 
@@ -469,24 +451,8 @@ struct MonthView: View {
         .opacity(calendarManager.isUpdating ? 0.6 : 1.0)
         .animation(.spring(response: 0.4, dampingFraction: 0.8, blendDuration: 0.1), value: calendarManager.isUpdating)
         .animation(.spring(response: 0.6, dampingFraction: 0.8, blendDuration: 0.2), value: currentMonth)
-        .gesture(
-            DragGesture(minimumDistance: 30)
-                .onEnded { value in
-                    if value.translation.width > 50 {
-                        // 向右滑动，切换到上一个月
-                        withAnimation(.spring(response: 0.6, dampingFraction: 0.8, blendDuration: 0.2)) {
-                            shiftMonth(-1)
-                        }
-                    } else if value.translation.width < -50 {
-                        // 向左滑动，切换到下一个月
-                        withAnimation(.spring(response: 0.6, dampingFraction: 0.8, blendDuration: 0.2)) {
-                            shiftMonth(1)
-                        }
-                    }
-                }
-        )
     }
-    
+
     private func shiftMonth(_ delta: Int) {
         guard !calendarManager.isUpdating else { 
             print("📅 MonthView: 正在更新中，跳过月份切换")

@@ -10,12 +10,6 @@ struct DayView: View {
     @State private var editingItem: ScheduleItem?
     @StateObject private var weatherManager = WeatherManager.shared
     @EnvironmentObject var colorSchemeManager: ColorSchemeManager
-    @Binding var currentViewMode: ViewMode // 从父视图接收视图模式绑定
-    
-    init(scheduleStore: ScheduleStore, currentViewMode: Binding<ViewMode>) {
-        self.scheduleStore = scheduleStore
-        self._currentViewMode = currentViewMode
-    }
 
     var body: some View {
         NavigationStack {
@@ -40,29 +34,6 @@ struct DayView: View {
                 }
                 ToolbarItem(placement: .automatic) {
                     HStack(spacing: 8) {
-                        // 视图模式切换按钮 - 在今日页面时隐藏
-                        if currentViewMode != .day {
-                            Button {
-                                withAnimation(.easeInOut(duration: 0.3)) {
-                                    currentViewMode = currentViewMode.nextMode
-                                }
-                            } label: {
-                                HStack(spacing: 4) {
-                                    Image(systemName: currentViewMode.icon)
-                                        .font(.system(size: 16, weight: .medium))
-                                    Text(currentViewMode.title)
-                                        .font(.system(size: 14, weight: .medium))
-                                }
-                                .foregroundColor(colorSchemeManager.accent)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 8)
-                                        .fill(colorSchemeManager.accent.opacity(0.1))
-                                )
-                            }
-                        }
-                        
                         // 添加按钮 - 动感多彩小圆圈
                         AnimatedPlusButton {
                             showAdd = true
@@ -107,23 +78,8 @@ struct DayView: View {
         .onAppear {
             weatherManager.fetchWeather()
         }
-        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("MonthSwitchGesture"))) { notification in
-            // 监听月份切换手势通知
-            if let userInfo = notification.userInfo,
-               let direction = userInfo["direction"] as? Int,
-               let viewType = userInfo["viewType"] as? Int,
-               viewType == 0 { // DayView对应的tab是0
-                
-                withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
-                    let calendar = Calendar.current
-                    if let newDate = calendar.date(byAdding: .month, value: direction, to: selectedDate) {
-                        selectedDate = newDate
-                    }
-                }
-            }
-        }
     }
-    
+
     @ViewBuilder
     private var customTitleView: some View {
         coloredTitleView // 统一使用带颜色的标题视图
@@ -297,7 +253,7 @@ struct DayView: View {
             if legalHolidays.contains(festivalName) {
                 return colorSchemeManager.legalHolidayColor
             } else {
-                return colorSchemeManager.accent // Corresponds to Color.accentColor
+                return colorSchemeManager.accent
             }
         case .solarTerm:
             return colorSchemeManager.solarTermColor

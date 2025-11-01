@@ -26,7 +26,7 @@ struct TimeFlowApp: App {
     
     var body: some Scene {
         WindowGroup {
-            ContentView(scheduleStore: store)
+            ContentView()
                 .environmentObject(notificationManager)
                 .environmentObject(cloudKitManager)
                 .environmentObject(backgroundTaskManager)
