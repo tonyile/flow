@@ -87,10 +87,10 @@ enum TabBarItem: Int, CaseIterable {
 
     var iconName: String {
         switch self {
-        case .time: return "clock"
+        case .time: return "calendar"
         case .week: return "calendar.week.leading"
         case .month: return "calendar"
-        case .flow: return "list.bullet"
+        case .flow: return "yensign.circle.fill"
         case .statistics: return "chart.bar.fill"
         case .settings: return "gear"
         }
