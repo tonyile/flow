@@ -18,10 +18,15 @@ struct TimeFlowApp: App {
     init() {
         // 设置通知代理
         UNUserNotificationCenter.current().delegate = notificationDelegate
-        
+
         // 设置中文本地化
         UserDefaults.standard.set(["zh-Hans"], forKey: "AppleLanguages")
         UserDefaults.standard.synchronize()
+
+        // 注册后台任务（尽早在应用启动阶段进行）
+        #if os(iOS)
+        BackgroundTaskManager.shared.registerBackgroundTasks()
+        #endif
     }
     
     var body: some Scene {
@@ -33,8 +38,6 @@ struct TimeFlowApp: App {
                 .environmentObject(colorSchemeManager)
                 .environment(\.locale, Locale(identifier: "zh-Hans"))
                 .onAppear {
-                    // 注册后台任务
-                    backgroundTaskManager.registerBackgroundTasks()
                     // 检查通知权限状态
                     notificationManager.checkAuthorizationStatus()
                     // 检查CloudKit账户状态

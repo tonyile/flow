@@ -16,6 +16,28 @@ class BackgroundTaskManager: ObservableObject {
     private init() {
         checkBackgroundRefreshStatus()
     }
+
+    // 去重与节流配置
+    private let refreshMinInterval: TimeInterval = 10 * 60
+    private let processingMinInterval: TimeInterval = 30 * 60
+
+    private let refreshLastSubmitKey = "BGLastRefreshSubmitDate"
+    private let processingLastSubmitKey = "BGLastProcessingSubmitDate"
+
+    private var refreshLastSubmitDate: Date? {
+        get { UserDefaults.standard.object(forKey: refreshLastSubmitKey) as? Date }
+        set { UserDefaults.standard.set(newValue, forKey: refreshLastSubmitKey) }
+    }
+
+    private var processingLastSubmitDate: Date? {
+        get { UserDefaults.standard.object(forKey: processingLastSubmitKey) as? Date }
+        set { UserDefaults.standard.set(newValue, forKey: processingLastSubmitKey) }
+    }
+
+    private func shouldThrottle(last: Date?, minInterval: TimeInterval) -> Bool {
+        guard let last = last else { return false }
+        return Date().timeIntervalSince(last) < minInterval
+    }
     
     // MARK: - 注册后台任务
     func registerBackgroundTasks() {
@@ -64,22 +86,50 @@ class BackgroundTaskManager: ObservableObject {
     }
     
     // MARK: - 调度后台任务
-    func scheduleBackgroundRefresh() {
+    func scheduleBackgroundRefresh(force: Bool = false) {
         #if os(iOS)
+        // 在提交前检查后台刷新能力
+        let status = UIApplication.shared.backgroundRefreshStatus
+        guard status == .available else {
+            print("🔄 后台刷新不可用，状态: \(status.rawValue)；请在系统设置中开启后台应用刷新")
+            return
+        }
+        // 节流：距离上次提交过短则跳过（除非强制）
+        if !force, shouldThrottle(last: refreshLastSubmitDate, minInterval: refreshMinInterval) {
+            if let last = refreshLastSubmitDate {
+                let remain = refreshMinInterval - Date().timeIntervalSince(last)
+                print("🔄 刷新任务节流，剩余 \(Int(max(0, remain)))s 后可再次提交")
+            }
+            return
+        }
+        // 去重：先取消相同标识的待请求，避免叠加
+        BGTaskScheduler.shared.cancel(taskRequestWithIdentifier: backgroundTaskIdentifier)
         let request = BGAppRefreshTaskRequest(identifier: backgroundTaskIdentifier)
         request.earliestBeginDate = Date(timeIntervalSinceNow: 15 * 60) // 15分钟后
         
         do {
             try BGTaskScheduler.shared.submit(request)
-            print("🔄 后台刷新任务已调度")
+            refreshLastSubmitDate = Date()
+            print("🔄 后台刷新任务已调度（去重+节流保护）")
         } catch {
-            print("🔄 调度后台刷新任务失败: \(error)")
+            let nsError = error as NSError
+            print("🔄 调度后台刷新任务失败: domain=\(nsError.domain) code=\(nsError.code) desc=\(nsError.localizedDescription)")
         }
         #endif
     }
     
-    func scheduleBackgroundProcessing() {
+    func scheduleBackgroundProcessing(force: Bool = false) {
         #if os(iOS)
+        // 节流：处理任务通常更重，间隔更长（除非强制）
+        if !force, shouldThrottle(last: processingLastSubmitDate, minInterval: processingMinInterval) {
+            if let last = processingLastSubmitDate {
+                let remain = processingMinInterval - Date().timeIntervalSince(last)
+                print("🔄 处理任务节流，剩余 \(Int(max(0, remain)))s 后可再次提交")
+            }
+            return
+        }
+        // 去重：先取消相同标识的待请求
+        BGTaskScheduler.shared.cancel(taskRequestWithIdentifier: processingTaskIdentifier)
         let request = BGProcessingTaskRequest(identifier: processingTaskIdentifier)
         request.requiresNetworkConnectivity = false
         request.requiresExternalPower = false
@@ -87,9 +137,11 @@ class BackgroundTaskManager: ObservableObject {
         
         do {
             try BGTaskScheduler.shared.submit(request)
-            print("🔄 后台处理任务已调度")
+            processingLastSubmitDate = Date()
+            print("🔄 后台处理任务已调度（去重+节流保护）")
         } catch {
-            print("🔄 调度后台处理任务失败: \(error)")
+            let nsError = error as NSError
+            print("🔄 调度后台处理任务失败: domain=\(nsError.domain) code=\(nsError.code) desc=\(nsError.localizedDescription)")
         }
         #endif
     }
@@ -100,7 +152,7 @@ class BackgroundTaskManager: ObservableObject {
         print("🔄 开始执行后台刷新任务")
         
         // 调度下一次后台任务
-        scheduleBackgroundRefresh()
+        scheduleBackgroundRefresh(force: true)
         
         let taskCompleted = DispatchGroup()
         taskCompleted.enter()
@@ -132,7 +184,7 @@ class BackgroundTaskManager: ObservableObject {
         print("🔄 开始执行后台处理任务")
         
         // 调度下一次后台任务
-        scheduleBackgroundProcessing()
+        scheduleBackgroundProcessing(force: true)
         
         let taskCompleted = DispatchGroup()
         taskCompleted.enter()
