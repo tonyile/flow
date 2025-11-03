@@ -23,7 +23,12 @@ class ScheduleStore: ObservableObject {
     
     func loadSchedules() {
         loadFromLocal()
-        
+        // 在 SwiftUI 预览环境中跳过 CloudKit 同步，避免预览构建超时
+        // Xcode 会在预览时设置环境变量 XCODE_RUNNING_FOR_PREVIEWS=1
+        if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
+            return
+        }
+
         Task {
             await syncWithCloudKit()
         }

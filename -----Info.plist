@@ -9,15 +9,20 @@
 		<string>processing</string>
 		<string>fetch</string>
 		<string>background-notification</string>
+		<string>audio</string>
 	</array>
 	<key>NSUserNotificationsUsageDescription</key>
 	<string>此应用需要发送通知来提醒您的日程安排</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>此应用需要访问本地网络来同步数据</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>此应用需要访问麦克风来录制自定义提醒音</string>
 	<key>BGTaskSchedulerPermittedIdentifiers</key>
 	<array>
 		<string>com.enow.dailyschedule.refresh</string>
 		<string>com.enow.dailyschedule.processing</string>
 	</array>
+	<key>AVAudioSessionCategoryPlayback</key>
+	<true/>
 </dict>
 </plist>

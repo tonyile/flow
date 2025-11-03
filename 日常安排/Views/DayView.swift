@@ -6,7 +6,6 @@ struct DayView: View {
     @State private var selectedDate: Date = .now
     @State private var showAdd: Bool = false
     @State private var showCalendar: Bool = false
-    @State private var showEditView: Bool = false
     @State private var editingItem: ScheduleItem?
     @StateObject private var weatherManager = WeatherManager.shared
     @EnvironmentObject var colorSchemeManager: ColorSchemeManager
@@ -45,10 +44,8 @@ struct DayView: View {
         .sheet(isPresented: $showAdd) {
             AddScheduleView(scheduleStore: scheduleStore, baseDate: selectedDate)
         }
-        .sheet(isPresented: $showEditView) {
-            if let editingItem = editingItem {
-                EditScheduleView(scheduleItem: editingItem, scheduleStore: scheduleStore)
-            }
+        .fullScreenCover(item: $editingItem) { editingItem in
+            EditScheduleView(scheduleItem: editingItem, scheduleStore: scheduleStore)
         }
         .sheet(isPresented: $showCalendar) {
             NavigationView {
@@ -97,7 +94,9 @@ struct DayView: View {
         } else {
             List {
                 ForEach(items, id: \.id) { item in
-                    ScheduleCardView(item: item, scheduleStore: scheduleStore)
+                    ScheduleCardView(item: item, scheduleStore: scheduleStore, onEdit: {
+                        editingItem = item
+                    })
                         .listRowBackground(Color.clear)
                         .listRowSeparator(.hidden)
                         .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
@@ -105,7 +104,6 @@ struct DayView: View {
                             // 编辑功能 - 实际实现
                             Button {
                                 editingItem = item
-                                showEditView = true
                             } label: {
                                 Label("编辑日程", systemImage: "pencil")
                             }

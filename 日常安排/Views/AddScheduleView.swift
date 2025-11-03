@@ -324,12 +324,22 @@ struct AddScheduleView: View {
                         }
                         .pickerStyle(MenuPickerStyle())
                         
-                        Picker("提醒音", selection: $reminderSound) {
-                            ForEach(ReminderSound.allCases, id: \.self) { sound in
-                                Text(sound.displayName).tag(sound)
+                        Button(action: {
+                            isShowingSoundSelection = true
+                        }) {
+                            HStack {
+                                Image(systemName: "bell")
+                                    .foregroundColor(.blue)
+                                Text("提醒音")
+                                Spacer()
+                                Text(reminderSound.displayName)
+                                    .foregroundColor(.secondary)
+                                Image(systemName: "chevron.right")
+                                    .foregroundColor(.secondary)
+                                    .font(.caption)
                             }
                         }
-                        .pickerStyle(MenuPickerStyle())
+                        .foregroundColor(.primary)
                     }
                 }
             }

@@ -3,7 +3,8 @@ import SwiftUI
 struct ScheduleCardView: View {
     let item: ScheduleItem
     @ObservedObject var scheduleStore: ScheduleStore
-    @State private var showEditView = false
+    // 由父视图统一控制编辑页的呈现，避免在 List 行内直接弹出导致的首开白屏
+    var onEdit: (() -> Void)? = nil
     @StateObject private var weatherManager = WeatherManager.shared
     @State private var scheduleWeather: WeatherInfo?
     @State private var isLoadingWeather = false
@@ -121,7 +122,7 @@ struct ScheduleCardView: View {
         )
         .contextMenu {
             Button(action: {
-                showEditView = true
+                onEdit?()
             }) {
                 Label("编辑日程", systemImage: "pencil")
             }
@@ -154,7 +155,7 @@ struct ScheduleCardView: View {
             }
             
             Button {
-                showEditView = true
+                onEdit?()
             } label: {
                 Label("编辑", systemImage: "pencil")
             }
@@ -167,9 +168,6 @@ struct ScheduleCardView: View {
             } label: {
                 Label(item.isCompleted ? "未完成" : "完成", systemImage: item.isCompleted ? "arrow.uturn.backward" : "checkmark.circle")
             }.tint(item.status.color)
-        }
-        .sheet(isPresented: $showEditView) {
-            EditScheduleView(scheduleItem: item, scheduleStore: scheduleStore)
         }
         .onAppear {
             fetchScheduleWeather()

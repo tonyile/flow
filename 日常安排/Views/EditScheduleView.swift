@@ -65,7 +65,7 @@ struct EditScheduleView: View {
     }
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Form {
                 Section(header: Text("基本信息")) {
                     TextField("标题", text: $title)
@@ -228,12 +228,22 @@ struct EditScheduleView: View {
                         }
                         .pickerStyle(MenuPickerStyle())
                         
-                        Picker("提醒音", selection: $reminderSound) {
-                            ForEach(ReminderSound.allCases, id: \.self) { sound in
-                                Text(sound.displayName).tag(sound)
+                        Button(action: {
+                            isShowingSoundSelection = true
+                        }) {
+                            HStack {
+                                Image(systemName: "speaker.wave.2.fill")
+                                    .foregroundColor(.blue)
+                                Text("提醒音")
+                                Spacer()
+                                Text(reminderSound.displayName)
+                                    .foregroundColor(.secondary)
+                                Image(systemName: "chevron.right")
+                                    .foregroundColor(.secondary)
+                                    .font(.caption)
                             }
                         }
-                        .pickerStyle(MenuPickerStyle())
+                        .foregroundColor(.primary)
                     }
                 }
             }
