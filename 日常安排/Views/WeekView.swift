@@ -8,6 +8,7 @@ struct WeekView: View {
     @State private var showAdd: Bool = false
     @State private var showCalendar: Bool = false
     @State private var selectedDateForAdd: Date = Date()
+    @State private var editingItem: ScheduleItem?
     @StateObject private var weatherManager = WeatherManager.shared
 
     var body: some View {
@@ -54,6 +55,9 @@ struct WeekView: View {
         }
         .sheet(isPresented: $showAdd) {
             AddScheduleView(scheduleStore: scheduleStore, baseDate: selectedDateForAdd)
+        }
+        .fullScreenCover(item: $editingItem) { editingItem in
+            EditScheduleView(scheduleItem: editingItem, scheduleStore: scheduleStore)
         }
         .sheet(isPresented: $showCalendar) {
             NavigationView {
@@ -231,8 +235,15 @@ struct WeekView: View {
                 .cornerRadius(8)
             } else {
                 ForEach(items, id: \.id) { item in
-                    ScheduleCardView(item: item, scheduleStore: scheduleStore)
+                    ScheduleCardView(item: item, scheduleStore: scheduleStore, onEdit: {
+                        editingItem = item
+                    })
                             .contextMenu {
+                                Button {
+                                    editingItem = item
+                                } label: {
+                                    Label("编辑日程", systemImage: "pencil")
+                                }
                                 if item.isRecurring {
                                     Divider()
                                     Button {
