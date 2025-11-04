@@ -98,14 +98,13 @@ class CloudKitManager: ObservableObject {
             throw CloudKitError.notSignedIn
         }
         
-        let query = CKQuery(recordType: "ScheduleItem", predicate: NSPredicate(format: "isDeleted == NO"))
+        var query = CKQuery(recordType: "ScheduleItem", predicate: NSPredicate(format: "isDeleted == NO"))
+        // 优先带排序；若服务器因缺少索引拒绝，则回退到无排序查询
         query.sortDescriptors = [NSSortDescriptor(key: "modifiedDate", ascending: false)]
         
         do {
             let (matchResults, _) = try await database.records(matching: query)
-            
             var scheduleItems: [ScheduleItem] = []
-            
             for (_, result) in matchResults {
                 switch result {
                 case .success(let record):
@@ -113,14 +112,36 @@ class CloudKitManager: ObservableObject {
                         scheduleItems.append(item)
                     }
                 case .failure(let error):
-                    print("获取记录失败: \(error)")
+                    print("获取记录失败: \(error.localizedDescription)")
                 }
             }
-            
             return scheduleItems
         } catch {
-            print("从CloudKit获取日程失败: \(error)")
-            throw error
+            if let ckError = error as? CKError, (ckError.code == .serverRejectedRequest || ckError.code == .invalidArguments) {
+                // 回退到无排序查询，避免因索引缺失导致首次启动报错
+                do {
+                    let fallbackQuery = CKQuery(recordType: "ScheduleItem", predicate: NSPredicate(format: "isDeleted == NO"))
+                    let (fallbackResults, _) = try await database.records(matching: fallbackQuery)
+                    var scheduleItems: [ScheduleItem] = []
+                    for (_, result) in fallbackResults {
+                        switch result {
+                        case .success(let record):
+                            if let item = ScheduleItem.fromCKRecord(record) {
+                                scheduleItems.append(item)
+                            }
+                        case .failure(let error):
+                            print("获取记录失败(回退查询): \(error.localizedDescription)")
+                        }
+                    }
+                    return scheduleItems
+                } catch {
+                    print("从CloudKit获取日程失败(回退查询): \(describeCKError(error))")
+                    throw error
+                }
+            } else {
+                print("从CloudKit获取日程失败: \(describeCKError(error))")
+                throw error
+            }
         }
     }
     
@@ -280,4 +301,12 @@ enum CloudKitError: LocalizedError {
             return "未知错误: \(error.localizedDescription)"
         }
     }
+}
+
+// MARK: - 错误描述辅助
+private func describeCKError(_ error: Error) -> String {
+    if let ckError = error as? CKError {
+        return "\(ckError.localizedDescription) (CKError: \(ckError.code.rawValue))"
+    }
+    return error.localizedDescription
 }

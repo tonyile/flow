@@ -186,7 +186,8 @@ class FlowStore: ObservableObject {
     }
     
     private func syncFromCloudKit() {
-        guard cloudKitManager.isSignedIn else {
+        // 必须登录且开启云同步
+        guard cloudKitManager.isSignedIn, cloudKitManager.isCloudSyncEnabled else {
             isLoading = false
             return
         }
@@ -194,10 +195,11 @@ class FlowStore: ObservableObject {
         Task {
             do {
                 let predicate = NSPredicate(value: true)
-                let query = CKQuery(recordType: "FlowItem", predicate: predicate)
+                var query = CKQuery(recordType: "FlowItem", predicate: predicate)
+                // 优先尝试带排序的查询（需要 CloudKit 上配置相应查询索引）
                 query.sortDescriptors = [NSSortDescriptor(key: "modifiedDate", ascending: false)]
                 
-                let (matchResults, _) = try await cloudKitManager.database.records(matching: query)
+                var (matchResults, _) = try await cloudKitManager.database.records(matching: query)
                 
                 var cloudItems: [FlowItem] = []
                 for (_, result) in matchResults {
@@ -217,12 +219,61 @@ class FlowStore: ObservableObject {
                     self.mergeCloudKitData(cloudItems)
                 }
             } catch {
-                await MainActor.run {
-                    self.isLoading = false
-                    self.errorMessage = "同步失败: \(error.localizedDescription)"
+                // 如果服务器因缺少查询索引或参数问题拒绝请求，回退到无排序查询
+                if let ckError = error as? CKError, (ckError.code == .serverRejectedRequest || ckError.code == .invalidArguments) {
+                    do {
+                        let predicate = NSPredicate(value: true)
+                        let fallbackQuery = CKQuery(recordType: "FlowItem", predicate: predicate)
+                        let (fallbackResults, _) = try await cloudKitManager.database.records(matching: fallbackQuery)
+                        var cloudItems: [FlowItem] = []
+                        for (_, result) in fallbackResults {
+                            switch result {
+                            case .success(let record):
+                                let item = FlowItem.fromCKRecord(record)
+                                cloudItems.append(item)
+                            case .failure(let error):
+                                print("CloudKit获取记录失败(回退查询): \(error.localizedDescription)")
+                            }
+                        }
+                        await MainActor.run {
+                            self.isLoading = false
+                            self.mergeCloudKitData(cloudItems)
+                        }
+                    } catch {
+                        // 对初次失败的索引/参数错误不弹窗，避免首次进入页面打扰用户
+                        if let ckError2 = error as? CKError, shouldSuppressAlert(for: ckError2.code) {
+                            await MainActor.run {
+                                self.isLoading = false
+                            }
+                        } else {
+                            await MainActor.run {
+                                self.isLoading = false
+                                self.errorMessage = "同步失败: \(self.describeCKError(error))"
+                            }
+                        }
+                    }
+                } else {
+                    // 其它错误保留提示
+                    await MainActor.run {
+                        self.isLoading = false
+                        self.errorMessage = "同步失败: \(self.describeCKError(error))"
+                    }
                 }
             }
         }
+    }
+
+    // 更清晰的错误描述（包含 CKError 数值编码）
+    private func describeCKError(_ error: Error) -> String {
+        if let ckError = error as? CKError {
+            return "\(ckError.localizedDescription) (CKError: \(ckError.code.rawValue))"
+        }
+        return error.localizedDescription
+    }
+    
+    private func shouldSuppressAlert(for code: CKError.Code) -> Bool {
+        // 视为非致命的错误：服务器拒绝请求（常见：缺少查询索引）、参数无效
+        return code == .serverRejectedRequest || code == .invalidArguments
     }
     
     private func mergeCloudKitData(_ cloudItems: [FlowItem]) {
