@@ -195,11 +195,11 @@ class FlowStore: ObservableObject {
         Task {
             do {
                 let predicate = NSPredicate(value: true)
-                var query = CKQuery(recordType: "FlowItem", predicate: predicate)
+                let query = CKQuery(recordType: "FlowItem", predicate: predicate)
                 // 优先尝试带排序的查询（需要 CloudKit 上配置相应查询索引）
                 query.sortDescriptors = [NSSortDescriptor(key: "modifiedDate", ascending: false)]
-                
-                var (matchResults, _) = try await cloudKitManager.database.records(matching: query)
+
+                let (matchResults, _) = try await cloudKitManager.database.records(matching: query)
                 
                 var cloudItems: [FlowItem] = []
                 for (_, result) in matchResults {

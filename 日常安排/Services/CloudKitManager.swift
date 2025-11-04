@@ -17,6 +17,12 @@ class CloudKitManager: ObservableObject {
             UserDefaults.standard.set(isCloudSyncEnabled, forKey: "isCloudSyncEnabled")
         }
     }
+    // 熔断控制：在服务器多次拒绝后暂时跳过CloudKit操作
+    @Published var isCloudKitTemporarilyDisabled: Bool = false
+    private var rejectionCount: Int = 0
+    private var circuitOpenUntil: Date?
+    private let circuitThreshold: Int = 3
+    private let circuitOpenDuration: TimeInterval = 30 * 60 // 30分钟
     
     private init() {
         self.database = container.privateCloudDatabase
@@ -27,6 +33,39 @@ class CloudKitManager: ObservableObject {
         self.isCloudSyncEnabled = UserDefaults.standard.bool(forKey: "isCloudSyncEnabled")
         checkAccountStatus()
     }
+
+    // MARK: - 熔断辅助
+    private var isCircuitOpen: Bool {
+        if let until = circuitOpenUntil {
+            if Date() < until { return true }
+            // 熔断期过后自动恢复
+            circuitOpenUntil = nil
+            isCloudKitTemporarilyDisabled = false
+            rejectionCount = 0
+        }
+        return false
+    }
+
+    private func recordServerRejection() {
+        rejectionCount += 1
+        if rejectionCount >= circuitThreshold && !isCircuitOpen {
+            circuitOpenUntil = Date().addingTimeInterval(circuitOpenDuration)
+            isCloudKitTemporarilyDisabled = true
+            let minutes = Int(circuitOpenDuration / 60)
+            print("CloudKit请求被服务器连续拒绝，开启熔断：未来 \(minutes) 分钟跳过云操作")
+        } else {
+            print("CloudKit服务器拒绝计数：\(rejectionCount)/\(circuitThreshold)")
+        }
+    }
+
+    private func clearRejectionCountersOnSuccess() {
+        if rejectionCount > 0 || isCloudKitTemporarilyDisabled {
+            print("CloudKit操作成功，重置熔断状态")
+        }
+        rejectionCount = 0
+        circuitOpenUntil = nil
+        isCloudKitTemporarilyDisabled = false
+    }
     
     // 检查iCloud账户状态
     func checkAccountStatus() {
@@ -35,12 +74,17 @@ class CloudKitManager: ObservableObject {
                 switch status {
                 case .available:
                     self?.isSignedIn = true
+                    print("iCloud账户状态: 可用")
                 case .noAccount, .restricted, .couldNotDetermine:
                     self?.isSignedIn = false
+                    let statusText = (status == .noAccount ? "无账户" : (status == .restricted ? "受限" : "无法确定"))
+                    print("iCloud账户状态: 不可用 (\(statusText))")
                 case .temporarilyUnavailable:
                     self?.isSignedIn = false
+                    print("iCloud账户状态: 暂时不可用")
                 @unknown default:
                     self?.isSignedIn = false
+                    print("iCloud账户状态: 未知")
                 }
             }
         }
@@ -56,13 +100,24 @@ class CloudKitManager: ObservableObject {
             throw CloudKitError.notSignedIn
         }
         
+        if isCircuitOpen {
+            print("CloudKit熔断中，跳过单条保存")
+            return
+        }
+        
         let record = item.toCKRecord()
         
         do {
             let savedRecord = try await database.save(record)
             print("成功保存日程到CloudKit: \(savedRecord.recordID)")
+            clearRejectionCountersOnSuccess()
         } catch {
-            print("保存日程到CloudKit失败: \(error)")
+            if let ckError = error as? CKError, ckError.code == .serverRejectedRequest {
+                print("保存日程到CloudKit失败(服务器拒绝): \(describeCKError(error)))")
+                recordServerRejection()
+            } else {
+                print("保存日程到CloudKit失败: \(describeCKError(error)))")
+            }
             throw error
         }
     }
@@ -77,11 +132,17 @@ class CloudKitManager: ObservableObject {
             throw CloudKitError.notSignedIn
         }
         
+        if isCircuitOpen {
+            print("CloudKit熔断中，跳过批量保存")
+            return
+        }
+        
         let records = items.map { $0.toCKRecord() }
         
         do {
             let savedRecords = try await database.modifyRecords(saving: records, deleting: [])
             print("成功批量保存 \(savedRecords.saveResults.count) 个日程到CloudKit")
+            clearRejectionCountersOnSuccess()
         } catch {
             // 如果批量保存被服务器拒绝或参数无效，尝试逐条保存以增加成功率
             if let ckError = error as? CKError, (ckError.code == .serverRejectedRequest || ckError.code == .invalidArguments || ckError.code == .partialFailure) {
@@ -95,12 +156,20 @@ class CloudKitManager: ObservableObject {
                     } catch {
                         failureCount += 1
                         print("单条保存失败: \(describeCKError(error)))")
+                        if let singleErr = error as? CKError, singleErr.code == .serverRejectedRequest {
+                            recordServerRejection()
+                        }
                     }
                 }
                 print("逐条保存完成：成功 \(successCount)，失败 \(failureCount)")
                 // 若全部失败，则抛出原始错误；否则视为整体成功
                 if successCount == 0 {
+                    // 针对服务器拒绝的常见原因提供提示
+                    print("CloudKit保存被服务器拒绝：请确认两端使用同一 iCloud 账号，处于同一 CloudKit 环境（开发/生产），并在 CloudKit 控制台为容器 \(self.container) 部署 ScheduleItem 记录类型及其字段到对应环境")
+                    recordServerRejection()
                     throw ckError
+                } else {
+                    clearRejectionCountersOnSuccess()
                 }
             } else {
                 print("批量保存日程到CloudKit失败: \(describeCKError(error)))")
@@ -119,7 +188,12 @@ class CloudKitManager: ObservableObject {
             throw CloudKitError.notSignedIn
         }
         
-        var query = CKQuery(recordType: "ScheduleItem", predicate: NSPredicate(format: "isDeleted == NO"))
+        if isCircuitOpen {
+            print("CloudKit熔断中，跳过查询并返回空列表")
+            return []
+        }
+        
+        let query = CKQuery(recordType: "ScheduleItem", predicate: NSPredicate(format: "isDeleted == NO"))
         // 优先带排序；若服务器因缺少索引拒绝，则回退到无排序查询
         query.sortDescriptors = [NSSortDescriptor(key: "modifiedDate", ascending: false)]
         
@@ -136,34 +210,36 @@ class CloudKitManager: ObservableObject {
                     print("获取记录失败: \(error.localizedDescription)")
                 }
             }
+            clearRejectionCountersOnSuccess()
             return scheduleItems
         } catch {
             if let ckError = error as? CKError, (ckError.code == .serverRejectedRequest || ckError.code == .invalidArguments) {
                 // 回退到无排序查询，避免因索引缺失导致首次启动报错
                 do {
-                    // 使用 TRUEPREDICATE，避免任何字段索引依赖；再在本地过滤/排序
                     let fallbackQuery = CKQuery(recordType: "ScheduleItem", predicate: NSPredicate(value: true))
-                    let (fallbackResults, _) = try await database.records(matching: fallbackQuery)
-                    var items: [ScheduleItem] = []
-                    for (_, result) in fallbackResults {
+                    let (matchResults, _) = try await database.records(matching: fallbackQuery)
+                    // 本地过滤 isDeleted == false，并按 modifiedDate 排序
+                    var scheduleItems: [ScheduleItem] = []
+                    for (_, result) in matchResults {
                         switch result {
                         case .success(let record):
-                            if let item = ScheduleItem.fromCKRecord(record) {
-                                items.append(item)
+                            if let item = ScheduleItem.fromCKRecord(record), item.isDeleted == false {
+                                scheduleItems.append(item)
                             }
                         case .failure(let error):
-                            print("获取记录失败(回退查询): \(error.localizedDescription)")
+                            print("获取记录失败: \(error.localizedDescription)")
                         }
                     }
-                    // 本地过滤未删除项，并按 modifiedDate 降序
-                    let filteredSorted = items
-                        .filter { !$0.isDeleted }
-                        .sorted { ($0.modifiedDate ?? Date.distantPast) > ($1.modifiedDate ?? Date.distantPast) }
-                    return filteredSorted
+                    // 本地排序，避免索引问题
+                    scheduleItems.sort { (a, b) in
+                        a.modifiedDate > b.modifiedDate
+                    }
+                    clearRejectionCountersOnSuccess()
+                    return scheduleItems
                 } catch {
-                    if let ckError2 = error as? CKError, (ckError2.code == .serverRejectedRequest || ckError2.code == .invalidArguments) {
-                        // 若回退仍因索引缺失被拒绝，则静默降级返回空列表，避免用户弹窗
+                    if let innerErr = error as? CKError, innerErr.code == .serverRejectedRequest {
                         print("从CloudKit获取日程失败(回退查询): \(describeCKError(error)) —— 无查询索引，返回空列表并继续")
+                        recordServerRejection()
                         return []
                     } else {
                         print("从CloudKit获取日程失败(回退查询): \(describeCKError(error))")
@@ -186,6 +262,11 @@ class CloudKitManager: ObservableObject {
         // 检查云同步开关
         guard isCloudSyncEnabled else {
             return // 如果云同步被禁用，直接返回成功
+        }
+        
+        if isCircuitOpen {
+            print("CloudKit熔断中，跳过删除(软删除)请求")
+            return
         }
         
         var updatedItem = item
@@ -338,7 +419,21 @@ enum CloudKitError: LocalizedError {
 // MARK: - 错误描述辅助
 private func describeCKError(_ error: Error) -> String {
     if let ckError = error as? CKError {
-        return "\(ckError.localizedDescription) (CKError: \(ckError.code.rawValue))"
+        var parts: [String] = []
+        parts.append("\(ckError.localizedDescription) (CKError: \(ckError.code.rawValue))")
+        let userInfo = ckError.userInfo
+        if !userInfo.isEmpty {
+            // 简化输出，避免过长日志：只列出关键键
+            var infoSummary: [String] = []
+            for (key, value) in userInfo {
+                let v = String(describing: value)
+                // 只截取前120字符，避免巨长内容影响日志可读性
+                let clipped = v.count > 120 ? String(v.prefix(120)) + "…" : v
+                infoSummary.append("\(key)=\(clipped)")
+            }
+            parts.append("[userInfo: \(infoSummary.joined(separator: ", "))]")
+        }
+        return parts.joined(separator: " ")
     }
     return error.localizedDescription
 }
