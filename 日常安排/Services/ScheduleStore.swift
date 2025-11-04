@@ -89,8 +89,13 @@ class ScheduleStore: ObservableObject {
             await scheduleAllNotifications()
             
         } catch {
-            errorMessage = "同步失败: \(error.localizedDescription)"
-            print("CloudKit同步失败: \(error)")
+            if let ckError = error as? CKError, (ckError.code == .serverRejectedRequest || ckError.code == .invalidArguments) {
+                // 由于查询索引缺失导致的请求被拒绝，视为可忽略错误：记录日志但不弹窗
+                print("CloudKit同步失败(可忽略): \(ckError) — 建议在 CloudKit 控制台为 ScheduleItem 添加查询索引")
+            } else {
+                errorMessage = "同步失败: \(error.localizedDescription)"
+                print("CloudKit同步失败: \(error)")
+            }
         }
     }
     

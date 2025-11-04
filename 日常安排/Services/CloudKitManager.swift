@@ -83,8 +83,29 @@ class CloudKitManager: ObservableObject {
             let savedRecords = try await database.modifyRecords(saving: records, deleting: [])
             print("成功批量保存 \(savedRecords.saveResults.count) 个日程到CloudKit")
         } catch {
-            print("批量保存日程到CloudKit失败: \(error)")
-            throw error
+            // 如果批量保存被服务器拒绝或参数无效，尝试逐条保存以增加成功率
+            if let ckError = error as? CKError, (ckError.code == .serverRejectedRequest || ckError.code == .invalidArguments || ckError.code == .partialFailure) {
+                print("批量保存日程到CloudKit失败(降级逐条保存): \(describeCKError(error)))")
+                var successCount = 0
+                var failureCount = 0
+                for record in records {
+                    do {
+                        _ = try await database.save(record)
+                        successCount += 1
+                    } catch {
+                        failureCount += 1
+                        print("单条保存失败: \(describeCKError(error)))")
+                    }
+                }
+                print("逐条保存完成：成功 \(successCount)，失败 \(failureCount)")
+                // 若全部失败，则抛出原始错误；否则视为整体成功
+                if successCount == 0 {
+                    throw ckError
+                }
+            } else {
+                print("批量保存日程到CloudKit失败: \(describeCKError(error)))")
+                throw error
+            }
         }
     }
     
@@ -120,23 +141,34 @@ class CloudKitManager: ObservableObject {
             if let ckError = error as? CKError, (ckError.code == .serverRejectedRequest || ckError.code == .invalidArguments) {
                 // 回退到无排序查询，避免因索引缺失导致首次启动报错
                 do {
-                    let fallbackQuery = CKQuery(recordType: "ScheduleItem", predicate: NSPredicate(format: "isDeleted == NO"))
+                    // 使用 TRUEPREDICATE，避免任何字段索引依赖；再在本地过滤/排序
+                    let fallbackQuery = CKQuery(recordType: "ScheduleItem", predicate: NSPredicate(value: true))
                     let (fallbackResults, _) = try await database.records(matching: fallbackQuery)
-                    var scheduleItems: [ScheduleItem] = []
+                    var items: [ScheduleItem] = []
                     for (_, result) in fallbackResults {
                         switch result {
                         case .success(let record):
                             if let item = ScheduleItem.fromCKRecord(record) {
-                                scheduleItems.append(item)
+                                items.append(item)
                             }
                         case .failure(let error):
                             print("获取记录失败(回退查询): \(error.localizedDescription)")
                         }
                     }
-                    return scheduleItems
+                    // 本地过滤未删除项，并按 modifiedDate 降序
+                    let filteredSorted = items
+                        .filter { !$0.isDeleted }
+                        .sorted { ($0.modifiedDate ?? Date.distantPast) > ($1.modifiedDate ?? Date.distantPast) }
+                    return filteredSorted
                 } catch {
-                    print("从CloudKit获取日程失败(回退查询): \(describeCKError(error))")
-                    throw error
+                    if let ckError2 = error as? CKError, (ckError2.code == .serverRejectedRequest || ckError2.code == .invalidArguments) {
+                        // 若回退仍因索引缺失被拒绝，则静默降级返回空列表，避免用户弹窗
+                        print("从CloudKit获取日程失败(回退查询): \(describeCKError(error)) —— 无查询索引，返回空列表并继续")
+                        return []
+                    } else {
+                        print("从CloudKit获取日程失败(回退查询): \(describeCKError(error))")
+                        throw error
+                    }
                 }
             } else {
                 print("从CloudKit获取日程失败: \(describeCKError(error))")
