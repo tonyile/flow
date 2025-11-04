@@ -4,6 +4,7 @@ import Foundation
 struct WeekView: View {
     @ObservedObject var scheduleStore: ScheduleStore
     @EnvironmentObject var colorSchemeManager: ColorSchemeManager
+    @Environment(\.colorScheme) private var colorScheme
     @State private var selectedWeekStart: Date = Date().startOfWeek
     @State private var showAdd: Bool = false
     @State private var showCalendar: Bool = false
@@ -86,7 +87,12 @@ struct WeekView: View {
         }
         .onAppear {
             weatherManager.fetchWeather()
+            colorSchemeManager.updateColors(for: colorScheme)
         }
+        .onChange(of: colorScheme) { newScheme in
+            colorSchemeManager.updateColors(for: newScheme)
+        }
+        .id(colorScheme)
     }
 
     // MARK: - 周导航栏

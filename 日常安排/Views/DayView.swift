@@ -9,6 +9,7 @@ struct DayView: View {
     @State private var editingItem: ScheduleItem?
     @StateObject private var weatherManager = WeatherManager.shared
     @EnvironmentObject var colorSchemeManager: ColorSchemeManager
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         NavigationStack {
@@ -74,7 +75,13 @@ struct DayView: View {
         }
         .onAppear {
             weatherManager.fetchWeather()
+            // 同步当前环境的颜色模式，确保切换后立即刷新
+            colorSchemeManager.updateColors(for: colorScheme)
         }
+        .onChange(of: colorScheme) { newScheme in
+            colorSchemeManager.updateColors(for: newScheme)
+        }
+        .id(colorScheme)
     }
 
     @ViewBuilder

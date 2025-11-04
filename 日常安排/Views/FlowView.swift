@@ -3,6 +3,8 @@ import SwiftUI
 struct FlowView: View {
     @ObservedObject private var flowStore = FlowStore.shared
     @StateObject private var weatherManager = WeatherManager()
+    @EnvironmentObject var colorSchemeManager: ColorSchemeManager
+    @Environment(\.colorScheme) private var colorScheme
     @State private var showingAddFlow = false
     @State private var selectedFlowItem: FlowItem?
     @State private var searchText = ""
@@ -156,6 +158,10 @@ struct FlowView: View {
         .onAppear {
             weatherManager.fetchWeather()
         }
+        .onChange(of: colorScheme) { newScheme in
+            colorSchemeManager.updateColors(for: newScheme)
+        }
+        .id(colorScheme)
     }
     
     @ViewBuilder

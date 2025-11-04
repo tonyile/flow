@@ -2,7 +2,7 @@ import SwiftUI
 
 struct ContentView: View {
     @State private var selectedTab: TabBarItem = .time
-    @StateObject private var colorSchemeManager = ColorSchemeManager.shared
+    @EnvironmentObject var colorSchemeManager: ColorSchemeManager
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -26,7 +26,6 @@ struct ContentView: View {
             CustomTabBar(selectedTab: $selectedTab)
                 .padding(.bottom, 1)
         }
-        .environmentObject(colorSchemeManager)
         .ignoresSafeArea(.keyboard)
     }
 }

@@ -31,8 +31,9 @@ class ColorSchemeManager: ObservableObject {
             .store(in: &cancellables)
     }
 
-    func updateColors() {
-        let colorScheme = UITraitCollection.current.userInterfaceStyle == .dark ? ColorScheme.dark : ColorScheme.light
+    // 允许指定颜色模式，便于在 SwiftUI 环境变化时及时刷新
+    func updateColors(for specifiedScheme: ColorScheme? = nil) {
+        let colorScheme = specifiedScheme ?? (UITraitCollection.current.userInterfaceStyle == .dark ? ColorScheme.dark : ColorScheme.light)
         
         if colorScheme == .dark {
             self.primary = .white

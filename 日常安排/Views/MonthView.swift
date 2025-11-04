@@ -156,6 +156,7 @@ class CalendarDataManager: ObservableObject {
 
 struct MonthView: View {
     @EnvironmentObject var colorSchemeManager: ColorSchemeManager
+    @Environment(\.colorScheme) private var colorScheme
     @ObservedObject var scheduleStore: ScheduleStore
     @ObservedObject var weatherManager = WeatherManager.shared
     @StateObject private var calendarManager = CalendarDataManager()
@@ -330,10 +331,15 @@ struct MonthView: View {
 
         .onAppear {
             calendarManager.updateMonth(currentMonth)
+            colorSchemeManager.updateColors(for: colorScheme)
         }
         .onChange(of: currentMonth) { oldValue, newValue in
             calendarManager.updateMonth(newValue)
         }
+        .onChange(of: colorScheme) { newScheme in
+            colorSchemeManager.updateColors(for: newScheme)
+        }
+        .id(colorScheme)
     }
     
 
