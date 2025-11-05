@@ -29,11 +29,12 @@ class NotificationManager: ObservableObject {
         }
     }
     
-    // 请求通知权限
+    // 请求通知权限（显示系统弹窗）
     func requestNotificationPermission() async -> Bool {
         do {
+            // 移除 .provisional，确保出现系统的“允许通知”弹窗
             let granted = try await UNUserNotificationCenter.current().requestAuthorization(
-                options: [.alert, .badge, .sound, .provisional]
+                options: [.alert, .badge, .sound]
             )
             
             print("🔔 通知权限请求结果: \(granted)")
@@ -50,14 +51,16 @@ class NotificationManager: ObservableObject {
         }
     }
     
-    // 如果需要，请求通知权限（首次启动时使用）
+    // 如果需要，请求通知权限（首次安装或处于临时授权时）
     func requestNotificationPermissionIfNeeded() async {
         let settings = await UNUserNotificationCenter.current().notificationSettings()
         
-        if settings.authorizationStatus == .notDetermined {
+        switch settings.authorizationStatus {
+        case .notDetermined, .provisional:
+            // 未决定或临时授权：发起标准授权请求，展示系统弹窗
             let granted = await requestNotificationPermission()
-            print("🔔 首次权限请求完成，结果: \(granted)")
-        } else {
+            print("🔔 首次/临时授权请求完成，结果: \(granted)")
+        default:
             await MainActor.run {
                 self.isAuthorized = settings.authorizationStatus == .authorized
             }

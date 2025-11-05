@@ -1,5 +1,8 @@
 import SwiftUI
 import UserNotifications
+#if canImport(UIKit)
+import UIKit
+#endif
 
 struct SettingsView: View {
     @ObservedObject var scheduleStore: ScheduleStore
@@ -374,6 +377,10 @@ struct SettingsView: View {
                 .listRowSeparator(.hidden)
             }
             .navigationTitle("设置")
+            // 从系统设置返回时，刷新通知授权状态以更新UI
+            .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
+                notificationManager.checkAuthorizationStatus()
+            }
             .alert("通知权限", isPresented: $showingPermissionAlert) {
                 Button("确定") { }
             } message: {
@@ -410,9 +417,15 @@ struct SettingsView: View {
                 if granted {
                     syncMessage = "通知权限已授权"
                 } else {
-                    syncMessage = "通知权限被拒绝，请在系统设置中手动开启"
+                    // 未授权：直接跳转到应用的系统设置页
+                    #if canImport(UIKit)
+                    if let settingsUrl = URL(string: UIApplication.openSettingsURLString),
+                       UIApplication.shared.canOpenURL(settingsUrl) {
+                        UIApplication.shared.open(settingsUrl)
+                    }
+                    #endif
                 }
-                showingPermissionAlert = true
+                // 不再弹确认提示框，避免多一步“确定”操作
             }
         }
     }
