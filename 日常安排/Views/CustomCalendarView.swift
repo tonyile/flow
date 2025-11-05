@@ -298,7 +298,7 @@ struct MonthYearPickerView: View {
     }
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack(spacing: 20) {
                 Text("选择年月")
                     .font(.title2)

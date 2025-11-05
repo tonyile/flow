@@ -100,7 +100,7 @@ enum ScheduleCategory: String, Codable, CaseIterable, Identifiable {
         case .study: return "学习"
         case .life: return "生活"
         case .health: return "健康"
-        case .festival: return "忆年"
+        case .festival: return "周年"
         case .other: return "其他"
         }
     }

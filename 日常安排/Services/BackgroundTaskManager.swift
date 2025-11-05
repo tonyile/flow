@@ -164,9 +164,9 @@ class BackgroundTaskManager: ObservableObject {
             taskCompleted.leave()
         }
         
-        // 执行计划状态检查
+        // 仅维护预定通知与清理，不再发送即时提醒
         Task {
-            await self.checkScheduleStatus()
+            await self.performDetailedScheduleCheck()
             task.setTaskCompleted(success: true)
             taskCompleted.leave()
         }
@@ -216,8 +216,6 @@ class BackgroundTaskManager: ObservableObject {
         print("📅 开始检查计划状态")
         
         let scheduleStore = ScheduleStore.shared
-        
-        // 获取今天和明天的计划
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
         let tomorrow = calendar.date(byAdding: .day, value: 1, to: today)!
@@ -245,16 +243,8 @@ class BackgroundTaskManager: ObservableObject {
             calendar.isDate(schedule.startTime, inSameDayAs: today)
         }
         
-        // 发送即将开始的计划通知
-        for schedule in soonSchedules {
-            await sendImmediateNotification(for: schedule, type: .upcoming)
-        }
-        
-        // 发送过期计划通知
-        if !overdueSchedules.isEmpty {
-            await sendOverdueNotification(count: overdueSchedules.count)
-        }
-        
+        print("⏱️ 15分钟内计划: \(soonSchedules.count)个，过期计划: \(overdueSchedules.count)个")
+        // 不在此阶段发送任何通知，仅记录状态，具体提醒由预定触发器负责
         print("📅 计划状态检查完成")
     }
     
@@ -263,8 +253,7 @@ class BackgroundTaskManager: ObservableObject {
     private func performDetailedScheduleCheck() async {
         print("📅 开始执行详细计划检查")
         
-        // 执行基本的计划状态检查
-        await checkScheduleStatus()
+        // 不再触发可能导致即时提醒的基础检查，仅做维护
         
         // 执行额外的处理任务
         let scheduleStore = ScheduleStore.shared
@@ -281,6 +270,9 @@ class BackgroundTaskManager: ObservableObject {
         for schedule in futureSchedules {
             notificationManager.updateNotification(for: schedule)
         }
+        
+        // 预定下一次每日固定时点的过期汇总（非重复，每天重算内容）
+        await notificationManager.scheduleNextDailyOverdueSummary(schedules: scheduleStore.scheduleItems)
         
         print("📅 详细计划检查完成")
     }
@@ -335,11 +327,20 @@ class BackgroundTaskManager: ObservableObject {
         }
     }
     
-    // MARK: - 发送过期计划通知
-    private func sendOverdueNotification(count: Int) async {
+    // MARK: - 发送过期计划通知（包含部分具体标题）
+    private func sendOverdueNotification(schedules: [ScheduleItem]) async {
+        let count = schedules.count
+        let topTitles = schedules.prefix(3).map { $0.title }
+        let details = topTitles.joined(separator: "、")
         let content = UNMutableNotificationContent()
-        content.title = "有未完成的计划"
-        content.body = "您有 \(count) 个计划已过期，请及时处理"
+        content.title = "有计划已过期"
+        if topTitles.isEmpty {
+            content.body = "您有 \(count) 个计划已过期，请及时处理"
+        } else if count <= 3 {
+            content.body = "已过期：\(details)"
+        } else {
+            content.body = "已过期：\(details) 等，共 \(count) 个"
+        }
         content.sound = .default
         content.badge = NSNumber(value: count)
         
@@ -354,7 +355,11 @@ class BackgroundTaskManager: ObservableObject {
             }
         }
         
-        content.userInfo = ["notificationType": NotificationType.overdue.rawValue]
+        content.userInfo = [
+            "notificationType": NotificationType.overdue.rawValue,
+            "overdueCount": count,
+            "overdueTitles": topTitles
+        ]
         
         let request = UNNotificationRequest(
             identifier: "overdue_summary_\(Date().timeIntervalSince1970)",

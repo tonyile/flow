@@ -224,6 +224,11 @@ class NotificationManager: ObservableObject {
                     // 打印所有待处理通知的数量
                     print("🔔 📊 当前待处理通知总数: \(requests.count)")
                 }
+
+                // 周年：在开始前一周内每日提醒一次
+                if item.isFestival && item.isYearlyRecurring && item.hasReminder {
+                    self.schedulePreAnniversaryDailyReminders(for: item)
+                }
             }
         }
     }
@@ -234,6 +239,21 @@ class NotificationManager: ObservableObject {
         
         UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [notificationId])
         UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: [notificationId])
+
+        // 额外清理：周年提前一周每日提醒
+        let center = UNUserNotificationCenter.current()
+        Task {
+            let pending = await center.pendingNotificationRequests()
+            let prefix = "pre_anniv_\(item.id.uuidString)_"
+            let relatedIds = pending
+                .map { $0.identifier }
+                .filter { $0.hasPrefix(prefix) }
+            if !relatedIds.isEmpty {
+                center.removePendingNotificationRequests(withIdentifiers: relatedIds)
+                center.removeDeliveredNotifications(withIdentifiers: relatedIds)
+                print("🧹 已清理周年每日提醒 \(relatedIds.count) 条，标识前缀: \(prefix)")
+            }
+        }
     }
     
     // 更新通知
@@ -249,6 +269,99 @@ class NotificationManager: ObservableObject {
         for item in items {
             if item.hasReminder {
                 scheduleNotification(for: item)
+            }
+        }
+    }
+
+    // MARK: - 周年前一周每日提醒
+    /// 为周年（节日，年度重复）在开始前一周内每日提醒一次
+    private func schedulePreAnniversaryDailyReminders(for item: ScheduleItem) {
+        guard isAuthorized, item.hasReminder, item.isFestival, item.isYearlyRecurring else { return }
+
+        let center = UNUserNotificationCenter.current()
+        let calendar = Calendar.current
+        let now = Date()
+        let bufferTime = DeviceNotificationHelper.shared.getRecommendedBufferTime()
+        let minimumFutureTime = now.addingTimeInterval(bufferTime)
+
+        // 基准提醒时间点（时/分）：优先使用自定义提醒时间，其次使用开始时间减去提前分钟数
+        let baseReminderDate: Date = {
+            if let custom = item.reminderTime { return custom }
+            let minutesBefore = max(item.reminderMinutesBefore, 1)
+            return Calendar.current.date(byAdding: .minute, value: -minutesBefore, to: item.startTime) ?? item.startTime
+        }()
+        let baseHM = calendar.dateComponents([.hour, .minute], from: baseReminderDate)
+
+        // 先清理同一日程ID的既有“周年每日提醒”，避免重复
+        Task {
+            let pending = await center.pendingNotificationRequests()
+            let prefix = "pre_anniv_\(item.id.uuidString)_"
+            let existing = pending.filter { $0.identifier.hasPrefix(prefix) }.map { $0.identifier }
+            if !existing.isEmpty {
+                center.removePendingNotificationRequests(withIdentifiers: existing)
+                print("🧹 清理已有周年每日提醒 \(existing.count) 条，准备重新调度")
+            }
+
+            // 调度 1..7 天前的每日提醒
+            for day in 1...7 {
+                guard let targetDay = calendar.date(byAdding: .day, value: -day, to: item.startTime) else { continue }
+                var comps = calendar.dateComponents([.year, .month, .day], from: targetDay)
+                comps.hour = baseHM.hour
+                comps.minute = baseHM.minute
+                comps.second = 0
+
+                // 具体触发日期时间
+                let triggerDate = calendar.date(from: comps) ?? targetDay
+                if triggerDate <= minimumFutureTime { continue } // 过去或太近，跳过
+
+                let id = String(format: "pre_anniv_%@_%04d%02d%02d",
+                                 item.id.uuidString,
+                                 comps.year ?? 0,
+                                 comps.month ?? 0,
+                                 comps.day ?? 0)
+
+                // 组装通知内容
+                let content = UNMutableNotificationContent()
+                content.title = "周年倒计时提醒"
+                content.body = "「\(item.title)」还有 \(day) 天"
+                content.categoryIdentifier = "UPCOMING_SCHEDULE"
+                content.badge = 1
+
+                // 声音沿用原提醒设置
+                if item.reminderSound == .defaultSound {
+                    content.sound = .default
+                } else if item.reminderSound == .custom, let customURL = item.customSoundURL {
+                    let soundName = customURL.lastPathComponent
+                    content.sound = UNNotificationSound(named: UNNotificationSoundName(soundName))
+                } else if let systemSoundName = item.reminderSound.systemSoundName {
+                    let soundName = "\(systemSoundName).wav"
+                    content.sound = UNNotificationSound(named: UNNotificationSoundName(soundName))
+                } else {
+                    content.sound = .default
+                }
+
+                // 图标附件（如有）
+                if let iconURL = Bundle.main.url(forResource: "notification_icon", withExtension: "png"),
+                   let attachment = try? UNNotificationAttachment(identifier: "notification_icon", url: iconURL, options: nil) {
+                    content.attachments = [attachment]
+                }
+
+                content.userInfo = [
+                    "scheduleId": item.id.uuidString,
+                    "scheduleTitle": item.title,
+                    "notificationType": "pre_anniversary",
+                    "daysRemaining": day
+                ]
+
+                let trigger = UNCalendarNotificationTrigger(dateMatching: comps, repeats: false)
+                let request = UNNotificationRequest(identifier: id, content: content, trigger: trigger)
+
+                do {
+                    try await center.add(request)
+                    print("📅 已调度周年每日提醒：\(id) 于 \(String(describing: trigger.nextTriggerDate()))")
+                } catch {
+                    print("📅 周年每日提醒调度失败：\(error)")
+                }
             }
         }
     }
@@ -281,6 +394,108 @@ class NotificationManager: ObservableObject {
             print("---")
         }
     }
+
+    // MARK: - 每日固定时点的过期汇总
+    /// 读取用户设定的每日汇总时间，默认 21:00
+    private func getDailySummaryTime() -> DateComponents {
+        let setHour = UserDefaults.standard.object(forKey: "DailyOverdueSummaryHour") as? Int
+        let setMinute = UserDefaults.standard.object(forKey: "DailyOverdueSummaryMinute") as? Int
+        let hour = setHour ?? 21
+        let minute = setMinute ?? 0
+        return DateComponents(hour: hour, minute: minute)
+    }
+
+    /// 根据当前计划，预定下一次“过期汇总”通知（不重复，每天重新调度）
+    func scheduleNextDailyOverdueSummary(schedules: [ScheduleItem]) async {
+        guard isAuthorized else { return }
+        let center = UNUserNotificationCenter.current()
+        let calendar = Calendar.current
+        let now = Date()
+
+        // 若用户关闭了“每日过期汇总”，则清理已预定的每日汇总请求并跳过调度
+        let isEnabled = (UserDefaults.standard.object(forKey: "DailyOverdueSummaryEnabled") as? Bool) ?? true
+        if !isEnabled {
+            let pending = await center.pendingNotificationRequests()
+            let ids = pending.filter { $0.identifier.hasPrefix("overdue_daily_") }.map { $0.identifier }
+            if !ids.isEmpty {
+                center.removePendingNotificationRequests(withIdentifiers: ids)
+                print("🔔 已关闭每日过期汇总，清理 \(ids.count) 个每日请求")
+            } else {
+                print("🔔 已关闭每日过期汇总，无每日请求需要清理")
+            }
+            return
+        }
+
+        // 计算下一次触发的日期
+        var time = getDailySummaryTime()
+        var nextDate = calendar.nextDate(after: now, matching: time, matchingPolicy: .nextTimePreservingSmallerComponents) ?? now
+        if nextDate <= now {
+            nextDate = calendar.date(byAdding: .day, value: 1, to: nextDate) ?? now.addingTimeInterval(24*3600)
+        }
+
+        // 生成已过期的计划摘要（到下一次触发时间为止）
+        let overdueSchedules = schedules.filter { item in
+            !item.isCompleted && item.endTime < nextDate
+        }
+        let count = overdueSchedules.count
+        let topTitles = overdueSchedules.prefix(3).map { $0.title }
+        let details = topTitles.joined(separator: "、")
+
+        let content = UNMutableNotificationContent()
+        content.title = "有计划已过期"
+        if topTitles.isEmpty {
+            content.body = "您有 \(count) 个计划已过期，请及时处理"
+        } else if count <= 3 {
+            content.body = "已过期：\(details)"
+        } else {
+            content.body = "已过期：\(details) 等，共 \(count) 个"
+        }
+        content.sound = .default
+        content.badge = NSNumber(value: max(count, 1))
+        content.categoryIdentifier = "OVERDUE_SCHEDULE"
+        content.userInfo = [
+            "notificationType": "overdue_daily",
+            "overdueCount": count,
+            "overdueTitles": topTitles
+        ]
+
+        if let iconURL = Bundle.main.url(forResource: "notification_icon", withExtension: "png"),
+           let attachment = try? UNNotificationAttachment(identifier: "notification_icon", url: iconURL, options: nil) {
+            content.attachments = [attachment]
+        }
+
+        // 当前日期对应的标识（例如 overdue_daily_20251105）
+        let components = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: nextDate)
+        let identifier = String(format: "overdue_daily_%04d%02d%02d", components.year ?? 0, components.month ?? 0, components.day ?? 0)
+
+        // 查询已存在的“每日汇总”请求，避免重复调度和不必要的增删操作
+        let pending = await center.pendingNotificationRequests()
+        let existingDaily = pending.filter { $0.identifier.hasPrefix("overdue_daily_") }
+        let alreadyScheduledForToday = existingDaily.contains { $0.identifier == identifier }
+
+        if alreadyScheduledForToday {
+            // 如果今天的汇总已经预定，则直接跳过，避免重复工作
+            print("🔔 今日每日过期汇总已存在（标识: \(identifier)），跳过重新预定")
+            return
+        }
+
+        // 清理旧的每日汇总（非今天的），避免积累
+        let outdatedIdentifiers = existingDaily.map { $0.identifier }.filter { $0 != identifier }
+        if !outdatedIdentifiers.isEmpty {
+            center.removePendingNotificationRequests(withIdentifiers: outdatedIdentifiers)
+            print("🔔 已移除过期的每日过期汇总通知 \(outdatedIdentifiers.count) 条")
+        }
+
+        // 使用非重复触发器，便于每日重算内容
+        let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
+        let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
+        do {
+            try await center.add(request)
+            print("📅 已预定每日过期汇总通知于: \(nextDate)")
+        } catch {
+            print("📅 预定每日过期汇总通知失败: \(error)")
+        }
+    }
     
     // MARK: - 增强功能：计划状态检查和到期提醒
     
@@ -311,7 +526,7 @@ class NotificationManager: ObservableObject {
         }
         
         if !overdueSchedules.isEmpty {
-            await sendOverdueNotification(count: overdueSchedules.count)
+            await sendOverdueNotification(schedules: overdueSchedules)
         }
         
         return overdueSchedules
@@ -320,8 +535,17 @@ class NotificationManager: ObservableObject {
     // 发送即将开始的计划通知
     private func sendUpcomingNotification(for schedule: ScheduleItem) async {
         let content = UNMutableNotificationContent()
-        content.title = "计划即将开始"
-        content.body = "\(schedule.title) 将在15分钟内开始"
+        // 计算距开始的剩余时间，优化提示语气
+        let now = Date()
+        let remainingSeconds = max(0, Int(schedule.startTime.timeIntervalSince(now)))
+        let remainingMinutes = max(1, Int(ceil(Double(remainingSeconds) / 60.0)))
+        if remainingMinutes <= 1 {
+            content.title = "温馨提醒：日程即将开始"
+            content.body = "「\(schedule.title)」马上开始啦，祝你顺利！"
+        } else {
+            content.title = "温馨提醒：日程即将开始"
+            content.body = "「\(schedule.title)」将在 \(remainingMinutes) 分钟后开始，做好准备哦。"
+        }
         content.sound = .default
         content.badge = 1
         content.categoryIdentifier = "UPCOMING_SCHEDULE"
@@ -357,11 +581,21 @@ class NotificationManager: ObservableObject {
         }
     }
     
-    // 发送过期计划汇总通知
-    private func sendOverdueNotification(count: Int) async {
+    // 发送过期计划汇总通知（包含部分具体标题）
+    private func sendOverdueNotification(schedules: [ScheduleItem]) async {
+        let count = schedules.count
+        let topTitles = schedules.prefix(3).map { $0.title }
+        let details = topTitles.joined(separator: "、")
         let content = UNMutableNotificationContent()
         content.title = "有计划已过期"
-        content.body = "您有 \(count) 个计划已过期，请及时处理"
+        // 显示部分具体过期计划标题，便于用户快速识别
+        if topTitles.isEmpty {
+            content.body = "您有 \(count) 个计划已过期，请及时处理"
+        } else if count <= 3 {
+            content.body = "已过期：\(details)"
+        } else {
+            content.body = "已过期：\(details) 等，共 \(count) 个"
+        }
         content.sound = .default
         content.badge = NSNumber(value: count)
         content.categoryIdentifier = "OVERDUE_SCHEDULE"
@@ -379,7 +613,8 @@ class NotificationManager: ObservableObject {
         
         content.userInfo = [
             "notificationType": "overdue",
-            "overdueCount": count
+            "overdueCount": count,
+            "overdueTitles": topTitles
         ]
         
         let request = UNNotificationRequest(
@@ -503,6 +738,15 @@ class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
                         name: NSNotification.Name("ScheduleNotificationTapped"),
                         object: nil,
                         userInfo: ["scheduleId": scheduleId]
+                    )
+                }
+            } else if let type = userInfo["notificationType"] as? String, type == "overdue" {
+                // 过期汇总通知的默认点击：触发查看过期计划
+                DispatchQueue.main.async {
+                    NotificationCenter.default.post(
+                        name: NSNotification.Name("ViewOverdueSchedules"),
+                        object: nil,
+                        userInfo: userInfo
                     )
                 }
             }

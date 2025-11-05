@@ -49,7 +49,7 @@ struct DayView: View {
             EditScheduleView(scheduleItem: editingItem, scheduleStore: scheduleStore)
         }
         .sheet(isPresented: $showCalendar) {
-            NavigationView {
+            NavigationStack {
                 CustomCalendarView(selectedDate: $selectedDate)
                     .navigationTitle("选择日期")
                     #if os(iOS)

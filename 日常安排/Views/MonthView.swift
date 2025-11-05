@@ -423,7 +423,7 @@ struct MonthView: View {
                                     scheduleToDelete = schedule
                                     showingDeleteAlert = true
                                 } label: {
-                                    Label("删除 \(schedule.title)（所有忆年）", systemImage: "trash.fill")
+                                    Label("删除 \(schedule.title)（所有周年）", systemImage: "trash.fill")
                                 }
                             } else {
                                 Button(role: .destructive) {

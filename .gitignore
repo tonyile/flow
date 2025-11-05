@@ -93,6 +93,7 @@ iOSInjectionProject/
 *.log
 build_*.log
 build_output*.log
+build_log*.txt
 build_result.xcresult/
 
 # Backup files
@@ -104,3 +105,8 @@ debug_*.swift
 
 # Entitlements backup
 *.entitlements.backup
+
+# Project-specific
+# Ignore capitalized Build directory and archive zips
+Build/
+*.zip

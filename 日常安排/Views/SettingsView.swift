@@ -17,9 +17,20 @@ struct SettingsView: View {
     @State private var duplicateCleanupResult: String?
     @State private var showingCleanupAlert = false
 
+    // 每日过期汇总设置
+    @State private var dailySummaryEnabled: Bool = (UserDefaults.standard.object(forKey: "DailyOverdueSummaryEnabled") as? Bool) ?? true
+    @State private var dailySummaryTime: Date = {
+        let hour = (UserDefaults.standard.object(forKey: "DailyOverdueSummaryHour") as? Int) ?? 21
+        let minute = (UserDefaults.standard.object(forKey: "DailyOverdueSummaryMinute") as? Int) ?? 0
+        var comps = DateComponents()
+        comps.hour = hour
+        comps.minute = minute
+        return Calendar.current.date(from: comps) ?? Date()
+    }()
+
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Form {
                 // 通知设置
                 Section(header: Text("通知设置")) {
@@ -67,6 +78,68 @@ struct SettingsView: View {
                                 }
                                 Text("清除所有通知")
                                     .foregroundColor(.red)
+                            }
+                        }
+
+                        // 每日过期汇总开关
+                        HStack {
+                            ZStack {
+                                Circle()
+                                    .fill(Color.orange.opacity(0.15))
+                                    .frame(width: 28, height: 28)
+                                Image(systemName: "calendar.badge.exclamationmark")
+                                    .font(.system(size: 14, weight: .medium))
+                                    .foregroundColor(.orange)
+                            }
+                            Text("每日过期汇总")
+                            Spacer()
+                            Toggle("", isOn: $dailySummaryEnabled)
+                                .onChange(of: dailySummaryEnabled) { _, newValue in
+                                    UserDefaults.standard.set(newValue, forKey: "DailyOverdueSummaryEnabled")
+                                    if newValue {
+                                        // 重新预定下一次每日汇总
+                                        Task { await notificationManager.scheduleNextDailyOverdueSummary(schedules: scheduleStore.scheduleItems) }
+                                    } else {
+                                        // 关闭时移除所有已预定的每日汇总
+                                        Task { @MainActor in
+                                            let center = UNUserNotificationCenter.current()
+                                            let pending = await center.pendingNotificationRequests()
+                                            let ids = pending.filter { $0.identifier.hasPrefix("overdue_daily_") }.map { $0.identifier }
+                                            if !ids.isEmpty { center.removePendingNotificationRequests(withIdentifiers: ids) }
+                                        }
+                                    }
+                                }
+                        }
+
+                        // 每日汇总时间选择器（仅在开启时显示）
+                        if dailySummaryEnabled {
+                            VStack(alignment: .leading) {
+                                HStack {
+                                    ZStack {
+                                        Circle()
+                                            .fill(Color.blue.opacity(0.15))
+                                            .frame(width: 28, height: 28)
+                                        Image(systemName: "clock")
+                                            .font(.system(size: 14, weight: .medium))
+                                            .foregroundColor(.blue)
+                                    }
+                                    Text("汇总时间")
+                                    Spacer()
+                                    DatePicker("", selection: $dailySummaryTime, displayedComponents: .hourAndMinute)
+                                        .labelsHidden()
+                                        .onChange(of: dailySummaryTime) { _, newDate in
+                                            let comps = Calendar.current.dateComponents([.hour, .minute], from: newDate)
+                                            let hour = comps.hour ?? 21
+                                            let minute = comps.minute ?? 0
+                                            UserDefaults.standard.set(hour, forKey: "DailyOverdueSummaryHour")
+                                            UserDefaults.standard.set(minute, forKey: "DailyOverdueSummaryMinute")
+                                            // 调整后立即重新预定下一次每日汇总
+                                            Task { await notificationManager.scheduleNextDailyOverdueSummary(schedules: scheduleStore.scheduleItems) }
+                                        }
+                                }
+                                Text("每日固定时间推送过期汇总（最多展示3个标题）")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
                             }
                         }
                     }

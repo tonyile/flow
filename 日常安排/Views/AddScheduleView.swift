@@ -146,7 +146,7 @@ struct AddScheduleView: View {
                         Toggle("年度重复", isOn: $isYearlyRecurring)
                         
                         if isYearlyRecurring {
-                            Picker("忆年类型", selection: $festivalType) {
+                            Picker("周年类型", selection: $festivalType) {
                                 ForEach(FestivalType.allCases.filter { $0 != .solarTerm }) { type in
                                     Text(type.label).tag(type)
                                 }
@@ -280,9 +280,9 @@ struct AddScheduleView: View {
                 
                 // 忆年期间显示
                 if isFestival && isYearlyRecurring {
-                    Section(header: Text("忆年期间")) {
+                    Section(header: Text("周年期间")) {
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("忆年期间内所有天数将自动包含")
+                            Text("周年期间内所有天数将自动包含")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                             

@@ -50,8 +50,6 @@ struct TimeFlowApp: App {
                 .task {
                     // 首次启动时自动请求通知权限
                     await notificationManager.requestNotificationPermissionIfNeeded()
-                    // 刷新计划通知状态
-                    await notificationManager.refreshScheduleNotifications(schedules: store.scheduleItems)
                 }
                 #if os(iOS)
                 .onReceive(NotificationCenter.default.publisher(for: UIApplication.didEnterBackgroundNotification)) { _ in
@@ -60,10 +58,9 @@ struct TimeFlowApp: App {
                     backgroundTaskManager.scheduleBackgroundProcessing()
                 }
                 .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
-                    // 应用即将进入前台时刷新通知状态
-                    Task {
-                        await notificationManager.refreshScheduleNotifications(schedules: store.scheduleItems)
-                    }
+                    // 应用即将进入前台时不再主动触发提醒，只维护权限与类别
+                    notificationManager.checkAuthorizationStatus()
+                    notificationManager.setupNotificationCategories()
                 }
                 #else
                 .onReceive(NotificationCenter.default.publisher(for: NSApplication.didHideNotification)) { _ in
@@ -72,10 +69,9 @@ struct TimeFlowApp: App {
                     backgroundTaskManager.scheduleBackgroundProcessing()
                 }
                 .onReceive(NotificationCenter.default.publisher(for: NSApplication.didUnhideNotification)) { _ in
-                    // 应用即将进入前台时刷新通知状态
-                    Task {
-                        await notificationManager.refreshScheduleNotifications(schedules: store.scheduleItems)
-                    }
+                    // 应用即将进入前台时不再主动触发提醒，只维护权限与类别
+                    notificationManager.checkAuthorizationStatus()
+                    notificationManager.setupNotificationCategories()
                 }
                 #endif
                 .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("MarkScheduleCompleted"))) { notification in

@@ -260,7 +260,7 @@ struct StatisticsView: View {
             Text("按分类完成")
                 .font(.title2)
                 .fontWeight(.semibold)  // 统一使用semibold
-                .padding(.leading, 16)
+                .padding(.leading, 12)
                 .padding(.top, 16)
                 .padding(.bottom, 12)
             
@@ -281,7 +281,7 @@ struct StatisticsView: View {
                     .fill(Color(NSColor.controlBackgroundColor))
                     #endif
             )
-            .padding(.horizontal, 16)
+            .padding(.horizontal, 12)
         }
     }
 
@@ -364,7 +364,7 @@ struct CategoryRowView: View {
                 .frame(height: 6)
             }
         }
-        .padding(.horizontal, 20)
+        .padding(.horizontal, 14)
         .padding(.vertical, 16)
     }
 }
