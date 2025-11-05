@@ -1,0 +1,13 @@
+{
+  "Simulator Target Bundle": "com.enow.dailyschedule.dev016",
+  "aps": {
+    "alert": {
+      "title": "测试通知",
+      "body": "点击此通知以验证不再崩溃"
+    },
+    "sound": "default",
+    "category": "UPCOMING_SCHEDULE"
+  },
+  "scheduleId": "00000000-0000-0000-0000-000000000000",
+  "notificationType": "test"
+}

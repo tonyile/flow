@@ -80,15 +80,20 @@ struct TimeFlowApp: App {
                 #endif
                 .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("MarkScheduleCompleted"))) { notification in
                     // 处理通知操作：标记完成
-                    if let scheduleId = notification.userInfo?["scheduleId"] as? String,
-                       let uuid = UUID(uuidString: scheduleId),
-                       let index = store.scheduleItems.firstIndex(where: { $0.id == uuid }) {
-                        store.scheduleItems[index].isCompleted = true
+                    DispatchQueue.main.async {
+                        if let scheduleId = notification.userInfo?["scheduleId"] as? String,
+                           let uuid = UUID(uuidString: scheduleId),
+                           let index = store.scheduleItems.firstIndex(where: { $0.id == uuid }) {
+                            store.scheduleItems[index].isCompleted = true
+                        }
                     }
                 }
                 .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("ViewOverdueSchedules"))) { _ in
                     // 处理通知操作：查看过期计划
-                    // 这里可以添加导航到过期计划视图的逻辑
+                    // 这里可以添加导航到过期计划视图的逻辑（确保主线程）
+                    DispatchQueue.main.async {
+                        // TODO: 导航到过期计划视图
+                    }
                 }
         }
     }

@@ -477,28 +477,34 @@ class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
         switch response.actionIdentifier {
         case "MARK_COMPLETED":
             if let scheduleId = userInfo["scheduleId"] as? String {
-                NotificationCenter.default.post(
-                    name: NSNotification.Name("MarkScheduleCompleted"),
-                    object: nil,
-                    userInfo: ["scheduleId": scheduleId]
-                )
+                DispatchQueue.main.async {
+                    NotificationCenter.default.post(
+                        name: NSNotification.Name("MarkScheduleCompleted"),
+                        object: nil,
+                        userInfo: ["scheduleId": scheduleId]
+                    )
+                }
             }
             
         case "VIEW_OVERDUE":
-            NotificationCenter.default.post(
-                name: NSNotification.Name("ViewOverdueSchedules"),
-                object: nil,
-                userInfo: userInfo
-            )
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(
+                    name: NSNotification.Name("ViewOverdueSchedules"),
+                    object: nil,
+                    userInfo: userInfo
+                )
+            }
             
         case UNNotificationDefaultActionIdentifier:
             // 默认点击通知的处理
             if let scheduleId = userInfo["scheduleId"] as? String {
-                NotificationCenter.default.post(
-                    name: NSNotification.Name("ScheduleNotificationTapped"),
-                    object: nil,
-                    userInfo: ["scheduleId": scheduleId]
-                )
+                DispatchQueue.main.async {
+                    NotificationCenter.default.post(
+                        name: NSNotification.Name("ScheduleNotificationTapped"),
+                        object: nil,
+                        userInfo: ["scheduleId": scheduleId]
+                    )
+                }
             }
             
         default:
