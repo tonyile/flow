@@ -80,6 +80,8 @@ struct CustomCalendarView: View {
                     }
             )
         }
+        // 为避免与导航标题“选择日期”重叠，增加顶部内边距
+        .padding(.top, 16)
         .padding(.vertical)
         #if os(iOS)
         .background(Color(.systemBackground))

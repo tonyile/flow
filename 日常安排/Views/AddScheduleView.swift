@@ -564,54 +564,71 @@ struct AddScheduleView: View {
         let festivalDuration = selectedFestival?.duration ?? 1 // 默认持续1天
         
         // 为未来几年创建忆年日程（默认15年）
-        let currentYear = calendar.component(.year, from: Date())
+        // 重要：以用户在当前页面选中的日期年份为基准，确保当年也被创建
+        let baseYear = calendar.component(.year, from: scheduleDate)
         let selectedMonth = calendar.component(.month, from: scheduleDate)
         let selectedDay = calendar.component(.day, from: scheduleDate)
         
         var successCount = 0
         var failureCount = 0
         
+        // 预先获取所选日期的农历信息（用于所有目标年份）
+        let baseLunarInfo = ChineseLunarCalendar.shared.getLunarInfo(for: scheduleDate)
+        let baseLunarMonth = getLunarMonthNumber(from: baseLunarInfo.month)
+        let baseLunarDay = getLunarDayNumber(from: baseLunarInfo.day)
+
         for yearOffset in 0..<15 {
-            let targetYear = currentYear + yearOffset
-            
+            let targetYear = baseYear + yearOffset
+
             // 根据忆年类型计算日期
             var targetDate: Date?
-            
+
             if festivalType == .solar {
-                // 阳历忆年：直接使用月日
-                targetDate = calendar.date(from: DateComponents(year: targetYear, month: selectedMonth, day: selectedDay))
-            } else {
-                // 农历忆年：获取用户选择日期对应的农历信息
-                let lunarInfo = ChineseLunarCalendar.shared.getLunarInfo(for: scheduleDate)
-                let lunarMonth = getLunarMonthNumber(from: lunarInfo.month)
-                let lunarDay = getLunarDayNumber(from: lunarInfo.day)
-                
-                // 验证农历转换参数
-                guard lunarMonth > 0 && lunarMonth <= 12,
-                      lunarDay > 0 && lunarDay <= 30 else {
-                    print("❌ 农历参数无效: 月份=\(lunarMonth), 日期=\(lunarDay)")
-                    failureCount += 1
-                    continue
-                }
-                
-                // 对于当前年份，如果是今天或之前的日期，直接使用选择的日期
-                if yearOffset == 0 && calendar.isDate(scheduleDate, inSameDayAs: Date()) {
+                // 当年直接使用当前页面选中的日期，确保当年必定创建成功
+                if yearOffset == 0 {
                     targetDate = scheduleDate
-                    print("🌙 使用当天选择的日期: \(scheduleDate)")
+                    print("☀️ 使用当前页面日期作为当年阳历周年: \(targetDate!)")
                 } else {
+                    // 其他年份使用月/日拼接
+                    targetDate = calendar.date(from: DateComponents(year: targetYear, month: selectedMonth, day: selectedDay))
+                }
+            } else {
+                // 农历忆年：使用所选日期对应的农历月/日，逐年转换为阳历
+                // 注意：农历11月(冬月)和12月(腊月)通常跨公历年，需要使用“目标公历年-1”的农历年进行转换，
+                // 以得到该公历年的正确阳历日期（例如腊月廿三通常落在次年一月）。
+
+                // 当年直接使用当前页面选中的日期，避免转换误差导致未创建
+                if yearOffset == 0 {
+                    targetDate = scheduleDate
+                    print("🌙 使用当前页面日期作为当年农历周年: \(targetDate!)")
+                } else {
+                    let lunarMonth = baseLunarMonth
+                    let lunarDay = baseLunarDay
+
+                    // 验证农历转换参数
+                    guard lunarMonth > 0 && lunarMonth <= 12,
+                          lunarDay > 0 && lunarDay <= 30 else {
+                        print("❌ 农历参数无效: 月份=\(lunarMonth), 日期=\(lunarDay)")
+                        failureCount += 1
+                        continue
+                    }
+
+                    // 针对跨年月份(冬月/腊月)的农历年修正
+                    let targetLunarYear = (lunarMonth >= 11) ? (targetYear - 1) : targetYear
+
                     // 使用农历转阳历的方法获取目标年份的阳历日期
                     targetDate = ChineseLunarCalendar.shared.lunarToSolar(
-                        year: targetYear, 
-                        month: lunarMonth, 
-                        day: lunarDay, 
-                        isLeapMonth: lunarInfo.isLeapMonth
+                        year: targetLunarYear,
+                        month: lunarMonth,
+                        day: lunarDay,
+                        isLeapMonth: baseLunarInfo.isLeapMonth
                     )
-                }
-                
-                if targetDate == nil {
-                    print("❌ 农历转换失败: \(targetYear)年农历\(lunarMonth)月\(lunarDay)日")
-                    failureCount += 1
-                    continue
+
+                    if targetDate == nil {
+                        print("❌ 农历转换失败: \(targetLunarYear)年农历\(lunarMonth)月\(lunarDay)日 (目标公历年: \(targetYear))")
+                        failureCount += 1
+                        continue
+                    }
                 }
             }
             

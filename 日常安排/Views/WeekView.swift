@@ -89,7 +89,7 @@ struct WeekView: View {
             weatherManager.fetchWeather()
             colorSchemeManager.updateColors(for: colorScheme)
         }
-        .onChange(of: colorScheme) { newScheme in
+        .onChange(of: colorScheme) { _, newScheme in
             colorSchemeManager.updateColors(for: newScheme)
         }
         .id(colorScheme)
@@ -249,6 +249,13 @@ struct WeekView: View {
                                     editingItem = item
                                 } label: {
                                     Label("编辑日程", systemImage: "pencil")
+                                }
+                                Button {
+                                    withAnimation(.easeInOut(duration: 0.3)) {
+                                        scheduleStore.toggleCompletion(for: item.id)
+                                    }
+                                } label: {
+                                    Label(item.isCompleted ? "标记为未完成" : "标记为完成", systemImage: item.isCompleted ? "arrow.uturn.backward" : "checkmark.circle")
                                 }
                                 if item.isRecurring {
                                     Divider()

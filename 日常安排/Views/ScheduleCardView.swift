@@ -120,31 +120,7 @@ struct ScheduleCardView: View {
                 )
                 .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
         )
-        .contextMenu {
-            Button(action: {
-                onEdit?()
-            }) {
-                Label("编辑日程", systemImage: "pencil")
-            }
-            
-            Button(action: {
-                scheduleStore.toggleCompletion(for: item.id)
-            }) {
-                Label(item.isCompleted ? "未完成" : "完成", 
-                      systemImage: item.isCompleted ? "circle" : "checkmark.circle")
-            }
-            
-            Divider()
-            
-            Button(role: .destructive, action: {
-                withAnimation(.easeInOut(duration: 0.3)) {
-                    scheduleStore.deleteSchedules(with: [item.id])
-                }
-            }) {
-                Label("删除日程", systemImage: "trash")
-            }
-        }
-        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
             // 删除按钮放在最右边，支持全滑删除
             Button(role: .destructive) {
                 withAnimation(.easeInOut(duration: 0.3)) {

@@ -158,7 +158,7 @@ struct FlowView: View {
         .onAppear {
             weatherManager.fetchWeather()
         }
-        .onChange(of: colorScheme) { newScheme in
+        .onChange(of: colorScheme) { _, newScheme in
             colorSchemeManager.updateColors(for: newScheme)
         }
         .id(colorScheme)

@@ -170,6 +170,7 @@ struct MonthView: View {
     @State private var showingDateDetail = false
     @State private var dateForDetail: Date = .now
     @State private var showingMonthPicker = false
+    @State private var editingItem: ScheduleItem?
     
     enum DeleteType {
         case single
@@ -328,6 +329,9 @@ struct MonthView: View {
         .sheet(isPresented: $showingMonthPicker) {
             MonthYearPickerView(selectedDate: $currentMonth)
         }
+        .fullScreenCover(item: $editingItem) { editingItem in
+            EditScheduleView(scheduleItem: editingItem, scheduleStore: scheduleStore)
+        }
 
         .onAppear {
             calendarManager.updateMonth(currentMonth)
@@ -336,7 +340,7 @@ struct MonthView: View {
         .onChange(of: currentMonth) { oldValue, newValue in
             calendarManager.updateMonth(newValue)
         }
-        .onChange(of: colorScheme) { newScheme in
+        .onChange(of: colorScheme) { _, newScheme in
             colorSchemeManager.updateColors(for: newScheme)
         }
         .id(colorScheme)
@@ -392,6 +396,19 @@ struct MonthView: View {
                     // 上下文菜单
                     if !daySchedules.isEmpty {
                         ForEach(daySchedules, id: \.id) { schedule in
+                            Button {
+                                editingItem = schedule
+                            } label: {
+                                Label("编辑日程", systemImage: "pencil")
+                            }
+
+                            Button {
+                                withAnimation(.easeInOut(duration: 0.3)) {
+                                    scheduleStore.toggleCompletion(for: schedule.id)
+                                }
+                            } label: {
+                                Label(schedule.isCompleted ? "标记为未完成" : "标记为完成", systemImage: schedule.isCompleted ? "arrow.uturn.backward" : "checkmark.circle")
+                            }
                             if schedule.isRecurring {
                                 Button {
                                     deleteType = .single

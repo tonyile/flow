@@ -78,7 +78,7 @@ struct DayView: View {
             // 同步当前环境的颜色模式，确保切换后立即刷新
             colorSchemeManager.updateColors(for: colorScheme)
         }
-        .onChange(of: colorScheme) { newScheme in
+        .onChange(of: colorScheme) { _, newScheme in
             colorSchemeManager.updateColors(for: newScheme)
         }
         .id(colorScheme)

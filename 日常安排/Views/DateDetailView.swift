@@ -10,6 +10,7 @@ struct DateDetailView: View {
     @State private var showingDeleteAlert = false
     @State private var scheduleToDelete: ScheduleItem?
     @State private var deleteType: DeleteType = .single
+    @State private var editingItem: ScheduleItem?
     
     enum DeleteType {
         case single
@@ -59,6 +60,9 @@ struct DateDetailView: View {
         }
         .sheet(isPresented: $showAdd) {
             AddScheduleView(scheduleStore: scheduleStore, baseDate: selectedDate)
+        }
+        .fullScreenCover(item: $editingItem) { editingItem in
+            EditScheduleView(scheduleItem: editingItem, scheduleStore: scheduleStore)
         }
         .alert("删除日程", isPresented: $showingDeleteAlert) {
             Button("取消", role: .cancel) { }
@@ -178,8 +182,25 @@ struct DateDetailView: View {
         } else {
             List {
                 ForEach(items, id: \.id) { item in
-                    ScheduleCardView(item: item, scheduleStore: scheduleStore)
+                    ScheduleCardView(item: item, scheduleStore: scheduleStore, onEdit: {
+                        editingItem = item
+                    })
                         .contextMenu {
+                            // 编辑
+                            Button {
+                                editingItem = item
+                            } label: {
+                                Label("编辑日程", systemImage: "pencil")
+                            }
+                            // 完成状态切换
+                            Button {
+                                withAnimation(.easeInOut(duration: 0.3)) {
+                                    scheduleStore.toggleCompletion(for: item.id)
+                                }
+                            } label: {
+                                Label(item.isCompleted ? "标记为未完成" : "标记为完成", systemImage: item.isCompleted ? "arrow.uturn.backward" : "checkmark.circle")
+                            }
+                            Divider()
                             if item.isRecurring {
                                 Button {
                                     deleteType = .single
