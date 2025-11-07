@@ -107,11 +107,11 @@ struct SoundSelectionView: View {
         
         guard let soundName = sound.systemSoundName else { return }
         
-        // 统一使用 URL 方式，优先根目录，再次尝试 Sounds 子目录，并兼容 wav
-        let url = Bundle.main.url(forResource: soundName, withExtension: "caf")
-            ?? Bundle.main.url(forResource: soundName, withExtension: "caf", subdirectory: "Sounds")
-            ?? Bundle.main.url(forResource: soundName, withExtension: "wav")
+        // 统一使用 URL 方式，优先使用更高保真 wav，再尝试 caf；兼容 Sounds 子目录
+        let url = Bundle.main.url(forResource: soundName, withExtension: "wav")
             ?? Bundle.main.url(forResource: soundName, withExtension: "wav", subdirectory: "Sounds")
+            ?? Bundle.main.url(forResource: soundName, withExtension: "caf")
+            ?? Bundle.main.url(forResource: soundName, withExtension: "caf", subdirectory: "Sounds")
 
         if let url = url {
             playAudioFile(at: url)

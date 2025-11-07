@@ -105,18 +105,18 @@ class NotificationManager: ObservableObject {
             content.sound = UNNotificationSound(named: UNNotificationSoundName(soundName))
             print("🔔 🔊 使用自定义音乐: \(soundName)")
         } else {
-            // 使用系统铃声（优先使用 caf，与打包资源一致）
+            // 使用系统铃声（优先使用更高保真 wav）
             if let systemSoundName = item.reminderSound.systemSoundName {
-                // 先尝试 caf
-                let cafName = "\(systemSoundName).caf"
-                if Bundle.main.url(forResource: systemSoundName, withExtension: "caf") != nil {
-                    content.sound = UNNotificationSound(named: UNNotificationSoundName(cafName))
-                    print("🔔 🔊 使用系统铃声: \(cafName)")
-                } else if Bundle.main.url(forResource: systemSoundName, withExtension: "wav") != nil {
-                    // 兼容可能存在的 wav 资源
-                    let wavName = "\(systemSoundName).wav"
+                // 先尝试 wav
+                let wavName = "\(systemSoundName).wav"
+                if Bundle.main.url(forResource: systemSoundName, withExtension: "wav") != nil {
                     content.sound = UNNotificationSound(named: UNNotificationSoundName(wavName))
                     print("🔔 🔊 使用系统铃声: \(wavName)")
+                } else if Bundle.main.url(forResource: systemSoundName, withExtension: "caf") != nil {
+                    // 兼容可能存在的 caf 资源
+                    let cafName = "\(systemSoundName).caf"
+                    content.sound = UNNotificationSound(named: UNNotificationSoundName(cafName))
+                    print("🔔 🔊 使用系统铃声: \(cafName)")
                 } else {
                     // 找不到匹配资源，回退默认
                     content.sound = .default
@@ -346,13 +346,13 @@ class NotificationManager: ObservableObject {
                     let soundName = customURL.lastPathComponent
                     content.sound = UNNotificationSound(named: UNNotificationSoundName(soundName))
                 } else if let systemSoundName = item.reminderSound.systemSoundName {
-                    // 与上文保持一致的扩展选择逻辑
-                    if Bundle.main.url(forResource: systemSoundName, withExtension: "caf") != nil {
-                        let cafName = "\(systemSoundName).caf"
-                        content.sound = UNNotificationSound(named: UNNotificationSoundName(cafName))
-                    } else if Bundle.main.url(forResource: systemSoundName, withExtension: "wav") != nil {
+                    // 与上文保持一致的扩展选择逻辑（优先 wav）
+                    if Bundle.main.url(forResource: systemSoundName, withExtension: "wav") != nil {
                         let wavName = "\(systemSoundName).wav"
                         content.sound = UNNotificationSound(named: UNNotificationSoundName(wavName))
+                    } else if Bundle.main.url(forResource: systemSoundName, withExtension: "caf") != nil {
+                        let cafName = "\(systemSoundName).caf"
+                        content.sound = UNNotificationSound(named: UNNotificationSoundName(cafName))
                     } else {
                         content.sound = .default
                         print("🔔 ⚠️ 周年提醒未找到铃声音频资源，回退默认: \(systemSoundName)")
