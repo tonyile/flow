@@ -354,7 +354,7 @@ struct DateSectionHeader: View {
 
 // MARK: - 流水项目行
 struct FlowItemRow: View {
-    let item: FlowItem
+    @ObservedObject var item: FlowItem
     
     var body: some View {
         HStack(spacing: 12) {
