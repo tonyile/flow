@@ -44,7 +44,7 @@ enum ReminderSound: String, Codable, CaseIterable, Identifiable {
         case .digitalAlarm: return "数字闹铃"
         case .gentleAlarm: return "轻柔闹铃"
         case .urgentAlarm: return "紧急闹铃"
-        case .extendedAlarm: return "加长闹铃"
+        case .extendedAlarm: return "花之舞"
         case .bell: return "铃铛"
         case .chime: return "钟声"
         case .ding: return "叮咚"
