@@ -14,14 +14,14 @@ struct CustomCalendarView: View {
     }()
     
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 12) {
             // 月份标题栏
             HStack {
                 Button(action: { showingMonthPicker = true }) {
                     Text(dateFormatter.string(from: currentMonth))
-                        .font(.title)  // 放大月份标题
-                        .fontWeight(.semibold)  // 统一使用semibold
-                        .foregroundColor(.primary)  // 主要颜色突出显示
+                        .font(.title2)  // 减小字号，避免与导航标题视觉冲突
+                        .fontWeight(.semibold)
+                        .foregroundColor(.primary)
                 }
                 .buttonStyle(PlainButtonStyle())
             }
@@ -80,8 +80,8 @@ struct CustomCalendarView: View {
                     }
             )
         }
-        // 为避免与导航标题“选择日期”重叠，增加顶部内边距
-        .padding(.top, 16)
+        // 为避免与导航标题“选择日期”重叠，进一步增加顶部内边距
+        .padding(.top, 56)
         .padding(.vertical)
         #if os(iOS)
         .background(Color(.systemBackground))

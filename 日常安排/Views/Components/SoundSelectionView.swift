@@ -13,6 +13,7 @@ struct SoundSelectionView: View {
     @Binding var customSoundURL: URL?
     @State private var isShowingDocumentPicker = false
     @State private var audioPlayer: AVAudioPlayer?
+    @State private var avPlayer: AVPlayer?
     @State private var lastClickedSound: String = "无"
     
     private let logger = Logger(subsystem: "com.enow.dailyschedule", category: "SoundSelection")
@@ -122,8 +123,15 @@ struct SoundSelectionView: View {
         audioPlayer?.stop()
         
         if sound == .defaultSound {
-            logger.info("🔔 播放系统默认通知声音")
-            AudioServicesPlaySystemSound(1007) // 系统默认通知声音
+            // 优先播放内置短音作为默认（更可靠），找不到再回退系统声音
+            if let url = Bundle.main.url(forResource: "note", withExtension: "caf")
+                ?? Bundle.main.url(forResource: "bell", withExtension: "caf") {
+                logger.info("🔔 播放应用内默认音频(note/bell)")
+                playAudioFile(at: url)
+            } else {
+                logger.info("🔔 回退为系统默认通知声音")
+                AudioServicesPlaySystemSound(1007)
+            }
             return
         }
         
@@ -149,21 +157,21 @@ struct SoundSelectionView: View {
                     logger.error("❌ 无法读取Sounds目录: \(error)")
                 }
             } else {
-                logger.error("❌ Sounds目录不存在")
+                logger.info("ℹ️ Sounds目录不存在，资源可能已被打包到根目录")
             }
         }
         
-        // 尝试从Sounds目录中加载音效文件
-        if let soundPath = Bundle.main.path(forResource: soundName, ofType: "caf", inDirectory: "Sounds") {
-            logger.info("✅ 在Sounds目录中找到音频文件: \(soundPath)")
-            let soundURL = URL(fileURLWithPath: soundPath)
-            playAudioFile(at: soundURL)
-        } else if let soundPath = Bundle.main.path(forResource: soundName, ofType: "caf") {
-            logger.info("✅ 在根目录中找到音频文件: \(soundPath)")
-            let soundURL = URL(fileURLWithPath: soundPath)
-            playAudioFile(at: soundURL)
+        // 统一使用 URL 方式，优先根目录，再次尝试 Sounds 子目录，并兼容 wav
+        let url = Bundle.main.url(forResource: soundName, withExtension: "caf")
+            ?? Bundle.main.url(forResource: soundName, withExtension: "caf", subdirectory: "Sounds")
+            ?? Bundle.main.url(forResource: soundName, withExtension: "wav")
+            ?? Bundle.main.url(forResource: soundName, withExtension: "wav", subdirectory: "Sounds")
+
+        if let url = url {
+            logger.info("✅ 找到音频文件: \(url.path)")
+            playAudioFile(at: url)
         } else {
-            logger.error("❌ 找不到音频文件: \(soundName).caf")
+            logger.error("❌ 找不到音频文件: \(soundName).(caf/wav)")
             logger.info("🔄 尝试播放系统声音作为备选")
             AudioServicesPlaySystemSound(1007)
         }
@@ -184,7 +192,7 @@ struct SoundSelectionView: View {
             return
         }
         
-        // 检查文件大小，如果太小可能是占位符文件
+        // 检查文件大小，如果太小可能是占位符文件；若是占位符，尝试同名的另一种扩展作为回退
         do {
             let attributes = try FileManager.default.attributesOfItem(atPath: url.path)
             let fileSize = attributes[.size] as? Int64 ?? 0
@@ -192,14 +200,43 @@ struct SoundSelectionView: View {
             logger.info("📏 音频文件大小: \(fileSize) 字节")
             
             if fileSize < 1000 {
-                print("⚠️ 文件太小，可能是占位符文件，使用系统声音")
-                logger.info("⚠️ 文件太小，可能是占位符文件，使用系统声音")
+                print("⚠️ 文件太小，可能是占位符文件，尝试扩展名回退")
+                logger.info("⚠️ 文件太小，可能是占位符文件，尝试扩展名回退")
+                let base = url.deletingPathExtension().lastPathComponent
+                let altExt = (url.pathExtension.lowercased() == "caf") ? "wav" : "caf"
+                if let altURL = Bundle.main.url(forResource: base, withExtension: altExt) {
+                    print("🔄 发现同名回退资源: \(altURL.lastPathComponent)")
+                    logger.info("🔄 发现同名回退资源: \(altURL.lastPathComponent)")
+                    playAudioFile(at: altURL)
+                    return
+                }
+                print("⚠️ 未找到同名回退资源，使用系统声音")
+                logger.info("⚠️ 未找到同名回退资源，使用系统声音")
                 AudioServicesPlaySystemSound(1007)
                 return
             }
         } catch {
             print("❌ 无法获取文件属性: \(error)")
             logger.error("❌ 无法获取文件属性: \(error)")
+        }
+
+        // 读取音频时长，长音频使用 AVPlayer 播放更稳（避免 AVAudioPlayer 载入大文件失败）
+        let asset = AVURLAsset(url: url)
+        let durationSeconds = CMTimeGetSeconds(asset.duration)
+        if durationSeconds.isFinite {
+            print("⏱️ 资产时长: \(durationSeconds)秒")
+            logger.info("⏱️ 资产时长: \(durationSeconds)秒")
+        }
+        if durationSeconds.isFinite && durationSeconds > 30 {
+            print("🎧 使用 AVPlayer 播放长音频")
+            logger.info("🎧 使用 AVPlayer 播放长音频")
+            avPlayer?.pause()
+            avPlayer = AVPlayer(url: url)
+            avPlayer?.play()
+            print("✅ AVPlayer开始播放")
+            logger.info("✅ AVPlayer开始播放")
+            print("=== AUDIO DEBUG END ===")
+            return
         }
         
         do {
@@ -222,14 +259,26 @@ struct SoundSelectionView: View {
                 logger.info("✅ 音频开始播放")
                 logger.info("⏱️ 音频时长: \(audioPlayer?.duration ?? 0)秒")
             } else {
-                print("❌ 音频播放失败")
-                logger.error("❌ 音频播放失败")
-                AudioServicesPlaySystemSound(1007)
+                print("❌ AVAudioPlayer播放失败，尝试使用AVPlayer")
+                logger.error("❌ AVAudioPlayer播放失败，尝试使用AVPlayer")
+                avPlayer?.pause()
+                avPlayer = AVPlayer(url: url)
+                avPlayer?.play()
+                print("✅ AVPlayer开始播放(AVAudioPlayer失败回退)")
+                logger.info("✅ AVPlayer开始播放(AVAudioPlayer失败回退)")
             }
         } catch {
-            print("❌ 音频播放错误: \(error.localizedDescription)")
-            logger.error("❌ 音频播放错误: \(error.localizedDescription)")
-            AudioServicesPlaySystemSound(1007)
+            // 记录更详细错误码并尝试 AVPlayer 回退
+            let nsError = error as NSError
+            print("❌ AVAudioPlayer错误: code=\(nsError.code), desc=\(nsError.localizedDescription)")
+            logger.error("❌ AVAudioPlayer错误: code=\(nsError.code), desc=\(nsError.localizedDescription)")
+            print("🔄 尝试使用AVPlayer回退播放")
+            logger.info("🔄 尝试使用AVPlayer回退播放")
+            avPlayer?.pause()
+            avPlayer = AVPlayer(url: url)
+            avPlayer?.play()
+            print("✅ AVPlayer开始播放(异常回退)")
+            logger.info("✅ AVPlayer开始播放(异常回退)")
         }
         print("=== AUDIO DEBUG END ===")
     }
@@ -255,6 +304,18 @@ struct SoundSelectionView: View {
             return
         }
         
+        // 根据时长选择播放器，并在 AVAudioPlayer 失败时回退到 AVPlayer
+        let asset = AVURLAsset(url: url)
+        let durationSeconds = CMTimeGetSeconds(asset.duration)
+        if durationSeconds.isFinite && durationSeconds > 30 {
+            logger.info("🎧 使用 AVPlayer 播放长自定义音频")
+            avPlayer?.pause()
+            avPlayer = AVPlayer(url: url)
+            avPlayer?.play()
+            logger.info("✅ AVPlayer开始播放(自定义)")
+            return
+        }
+        
         do {
             audioPlayer = try AVAudioPlayer(contentsOf: url)
             logger.info("✅ 自定义音频AVAudioPlayer创建成功")
@@ -270,10 +331,20 @@ struct SoundSelectionView: View {
                 logger.info("✅ 自定义音频开始播放")
                 logger.info("⏱️ 自定义音频时长: \(audioPlayer?.duration ?? 0)秒")
             } else {
-                logger.error("❌ 自定义音频播放失败")
+                logger.error("❌ 自定义音频AVAudioPlayer播放失败，回退AVPlayer")
+                avPlayer?.pause()
+                avPlayer = AVPlayer(url: url)
+                avPlayer?.play()
+                logger.info("✅ AVPlayer开始播放(自定义回退)")
             }
         } catch {
-            logger.error("❌ 自定义音频播放错误: \(error.localizedDescription)")
+            let nsError = error as NSError
+            logger.error("❌ 自定义音频AVAudioPlayer错误: code=\(nsError.code), desc=\(nsError.localizedDescription)")
+            logger.info("🔄 尝试使用AVPlayer回退播放(自定义)")
+            avPlayer?.pause()
+            avPlayer = AVPlayer(url: url)
+            avPlayer?.play()
+            logger.info("✅ AVPlayer开始播放(自定义异常回退)")
         }
     }
 }
@@ -360,21 +431,37 @@ struct DocumentPicker: UIViewControllerRepresentable {
         
         func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
             guard let url = urls.first else { return }
-            
-            // 复制文件到应用的Documents目录
-            let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-            let destinationURL = documentsPath.appendingPathComponent(url.lastPathComponent)
-            
+
+            // 复制文件到应用的 Library/Sounds 目录（通知支持从此目录加载）
+            let libraryURL = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask)[0]
+            let soundsDir = libraryURL.appendingPathComponent("Sounds", isDirectory: true)
+
             do {
-                // 如果文件已存在，先删除
-                if FileManager.default.fileExists(atPath: destinationURL.path) {
-                    try FileManager.default.removeItem(at: destinationURL)
+                // 创建 Sounds 目录（如不存在）
+                if !FileManager.default.fileExists(atPath: soundsDir.path) {
+                    try FileManager.default.createDirectory(at: soundsDir, withIntermediateDirectories: true)
                 }
-                
+
+                let destURL = soundsDir.appendingPathComponent(url.lastPathComponent)
+
+                // 如果文件已存在，先删除
+                if FileManager.default.fileExists(atPath: destURL.path) {
+                    try FileManager.default.removeItem(at: destURL)
+                }
+
                 // 复制文件
-                try FileManager.default.copyItem(at: url, to: destinationURL)
-                parent.selectedURL = destinationURL
-                print("自定义音频文件已保存到: \(destinationURL.path)")
+                try FileManager.default.copyItem(at: url, to: destURL)
+                parent.selectedURL = destURL
+                print("自定义音频文件已保存到: \(destURL.path)")
+
+                // 读取时长用于提示通知限制（约30秒）
+                if let player = try? AVAudioPlayer(contentsOf: destURL) {
+                    let duration = player.duration
+                    print("⏱️ 自定义音频时长: \(duration) 秒")
+                    if duration > 30.0 {
+                        print("⚠️ 提示：通知声音需小于约30秒，超出可能回退为默认音")
+                    }
+                }
             } catch {
                 print("复制音频文件失败: \(error.localizedDescription)")
             }

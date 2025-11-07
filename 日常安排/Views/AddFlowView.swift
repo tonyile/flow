@@ -30,7 +30,7 @@ struct AddFlowView: View {
     @State private var validationMessage = ""
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Form {
                 // 基本信息
                 Section("基本信息") {

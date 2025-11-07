@@ -33,7 +33,7 @@ struct EditFlowView: View {
     @State private var showingDeleteAlert = false
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Form {
                 // 基本信息
                 Section("基本信息") {

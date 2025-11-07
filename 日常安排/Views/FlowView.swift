@@ -60,7 +60,7 @@ struct FlowView: View {
     }
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack(spacing: 0) {
                 // 搜索栏
                 FlowSearchBar(text: $searchText)
@@ -98,6 +98,19 @@ struct FlowView: View {
                                             }
                                             .tint(.blue)
                                         }
+                                        .contextMenu {
+                                            Button {
+                                                selectedFlowItem = item
+                                            } label: {
+                                                Label("编辑流水", systemImage: "pencil")
+                                            }
+
+                                            Button(role: .destructive) {
+                                                flowStore.deleteItem(item)
+                                            } label: {
+                                                Label("删除", systemImage: "trash")
+                                            }
+                                        }
                                 }
                             }
                         }
@@ -111,16 +124,11 @@ struct FlowView: View {
                 
                 Spacer()
             }
-            .navigationTitle("")
+            .navigationTitle("日常流水")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .toolbar {
-                ToolbarItem(placement: .principal) {
-                    Text("日常流水")
-                        .font(.system(.title2, design: .default, weight: .semibold))
-                        .foregroundColor(.primary)
-                }
                 #if os(iOS)
                 ToolbarItem(placement: .navigationBarTrailing) {
                     AnimatedPlusButton {
@@ -163,7 +171,7 @@ struct FlowView: View {
         }
         .id(colorScheme)
     }
-    
+
     @ViewBuilder
     private var flowTitleView: some View {
         let currentDate = Date()
@@ -171,7 +179,7 @@ struct FlowView: View {
         let festival = ChineseFestivalManager.shared.getPrimaryFestival(for: currentDate)
         let baseTitle = dayFormatter.string(from: currentDate)
         let lunarTitle = "\(lunarInfo.month)\(lunarInfo.day)"
-        
+
         HStack(spacing: 4) {
             // 日期
             Text(baseTitle)
@@ -445,7 +453,7 @@ struct FilterSheetView: View {
     @Environment(\.dismiss) private var dismiss
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Form {
                 Section("类型筛选") {
                     Picker("类型", selection: $selectedType) {
