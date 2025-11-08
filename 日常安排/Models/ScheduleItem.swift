@@ -278,7 +278,7 @@ struct ScheduleItem: Identifiable, Codable {
     var reminderTime: Date?
     var reminderMinutesBefore: Int = 15 // 提前多少分钟提醒
     var notificationId: String? // 本地通知ID
-    var reminderSound: ReminderSound = .defaultSound // 提醒音乐
+    var reminderSound: ReminderSound = .gentleAlarm // 提醒音乐（默认轻柔闹铃）
     var customSoundURL: URL? // 自定义音乐文件路径
     
     // 城市相关属性

@@ -103,9 +103,11 @@ struct SoundSelectionView: View {
         stopCurrentPlayback()
         
         if sound == .defaultSound {
-            // 优先播放内置短音作为默认（更可靠），找不到再回退系统声音
-            if let url = Bundle.main.url(forResource: "note", withExtension: "caf")
-                ?? Bundle.main.url(forResource: "bell", withExtension: "caf") {
+            // 默认提示音调整为轻柔闹铃（gentle_alarm），找不到再回退系统声音
+            if let url = Bundle.main.url(forResource: "gentle_alarm", withExtension: "wav")
+                ?? Bundle.main.url(forResource: "gentle_alarm", withExtension: "wav", subdirectory: "Sounds")
+                ?? Bundle.main.url(forResource: "gentle_alarm", withExtension: "caf")
+                ?? Bundle.main.url(forResource: "gentle_alarm", withExtension: "caf", subdirectory: "Sounds") {
                 playAudioFile(at: url)
             } else {
                 AudioServicesPlaySystemSound(1007)

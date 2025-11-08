@@ -32,7 +32,7 @@ struct AddScheduleView: View {
     // 提醒相关状态
     @State private var hasReminder: Bool = true
     @State private var reminderMinutesBefore: Int = 15
-    @State private var reminderSound: ReminderSound = .defaultSound
+    @State private var reminderSound: ReminderSound = .gentleAlarm
     @State private var customSoundURL: URL?
     @State private var isShowingSoundSelection = false
     @State private var audioPlayer: AVAudioPlayer?

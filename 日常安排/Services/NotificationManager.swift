@@ -97,8 +97,19 @@ class NotificationManager: ObservableObject {
         
         // 设置自定义音乐
         if item.reminderSound == .defaultSound {
-            content.sound = .default
-            print("🔔 🔊 使用默认通知声音")
+            // 默认提示音调整为轻柔闹铃（gentle_alarm），优先 wav 其次 caf
+            if Bundle.main.url(forResource: "gentle_alarm", withExtension: "wav") != nil
+                || Bundle.main.url(forResource: "gentle_alarm", withExtension: "wav", subdirectory: "Sounds") != nil {
+                content.sound = UNNotificationSound(named: UNNotificationSoundName("gentle_alarm.wav"))
+                print("🔔 🔊 使用默认通知声音(轻柔闹铃): gentle_alarm.wav")
+            } else if Bundle.main.url(forResource: "gentle_alarm", withExtension: "caf") != nil
+                        || Bundle.main.url(forResource: "gentle_alarm", withExtension: "caf", subdirectory: "Sounds") != nil {
+                content.sound = UNNotificationSound(named: UNNotificationSoundName("gentle_alarm.caf"))
+                print("🔔 🔊 使用默认通知声音(轻柔闹铃): gentle_alarm.caf")
+            } else {
+                content.sound = .default
+                print("🔔 ⚠️ 未找到轻柔闹铃资源，回退系统默认")
+            }
         } else if item.reminderSound == .custom, let customURL = item.customSoundURL {
             // 使用自定义音乐文件
             let soundName = customURL.lastPathComponent
@@ -343,7 +354,16 @@ class NotificationManager: ObservableObject {
 
                 // 声音沿用原提醒设置
                 if item.reminderSound == .defaultSound {
-                    content.sound = .default
+                    // 默认提示音调整为轻柔闹铃（gentle_alarm），优先 wav 其次 caf
+                    if Bundle.main.url(forResource: "gentle_alarm", withExtension: "wav") != nil
+                        || Bundle.main.url(forResource: "gentle_alarm", withExtension: "wav", subdirectory: "Sounds") != nil {
+                        content.sound = UNNotificationSound(named: UNNotificationSoundName("gentle_alarm.wav"))
+                    } else if Bundle.main.url(forResource: "gentle_alarm", withExtension: "caf") != nil
+                                || Bundle.main.url(forResource: "gentle_alarm", withExtension: "caf", subdirectory: "Sounds") != nil {
+                        content.sound = UNNotificationSound(named: UNNotificationSoundName("gentle_alarm.caf"))
+                    } else {
+                        content.sound = .default
+                    }
                 } else if item.reminderSound == .custom, let customURL = item.customSoundURL {
                     let soundName = customURL.lastPathComponent
                     content.sound = UNNotificationSound(named: UNNotificationSoundName(soundName))
