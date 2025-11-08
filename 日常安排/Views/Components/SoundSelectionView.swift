@@ -74,7 +74,15 @@ struct SoundSelectionView: View {
             #endif
         }
     }
-    
+
+    // 统一停止当前播放，避免切换时旧音频继续播放
+    private func stopCurrentPlayback() {
+        audioPlayer?.stop()
+        audioPlayer = nil
+        avPlayer?.pause()
+        avPlayer = nil
+    }
+
     private func configureAudioSession() {
         do {
             let audioSession = AVAudioSession.sharedInstance()
@@ -91,8 +99,8 @@ struct SoundSelectionView: View {
         // 配置音频会话
         configureAudioSession()
         
-        // 停止当前播放的音效
-        audioPlayer?.stop()
+        // 停止当前播放，避免重叠
+        stopCurrentPlayback()
         
         if sound == .defaultSound {
             // 优先播放内置短音作为默认（更可靠），找不到再回退系统声音
@@ -126,6 +134,9 @@ struct SoundSelectionView: View {
         
         // 配置音频会话
         configureAudioSession()
+        
+        // 停止当前播放，避免切换时重叠
+        stopCurrentPlayback()
         
         // 检查文件是否存在
         if !FileManager.default.fileExists(atPath: url.path) {
@@ -169,8 +180,8 @@ struct SoundSelectionView: View {
         // 配置音频会话
         configureAudioSession()
         
-        // 停止当前播放的音效
-        audioPlayer?.stop()
+        // 停止当前播放，避免重叠
+        stopCurrentPlayback()
         
         // 检查文件是否存在
         if !FileManager.default.fileExists(atPath: url.path) { return }
