@@ -60,8 +60,19 @@ struct StatisticsView: View {
 
     private var completionSection: some View {
         let calendar = Calendar.current
+
+        // 计算月份范围：起始为本月第一天；结束为当月的今天（包含今天），其他月份为该月末
+        let now = Date()
+        let monthInterval = calendar.dateInterval(of: .month, for: selectedMonth)
+        let startOfMonth = monthInterval?.start ?? selectedMonth
+        let endOfMonth = monthInterval?.end ?? selectedMonth
+        let endOfToday = calendar.dateInterval(of: .day, for: now)?.end ?? now
+        let isCurrentMonth = calendar.isDate(selectedMonth, equalTo: now, toGranularity: .month)
+        let upperBound = isCurrentMonth ? endOfToday : endOfMonth
+
+        // 仅统计 [本月起, 今日结束) 区间内的日程
         let monthSchedules = scheduleStore.scheduleItems.filter { item in
-            calendar.isDate(item.startTime, equalTo: selectedMonth, toGranularity: .month)
+            item.startTime >= startOfMonth && item.startTime < upperBound
         }
         
         let rate: Double
@@ -243,8 +254,18 @@ struct StatisticsView: View {
     }
 
     private var categorySection: some View {
-        let items = scheduleStore.scheduleItems.filter { 
-            Calendar.current.isDate($0.startTime, equalTo: selectedMonth, toGranularity: .month) 
+        let calendar = Calendar.current
+        let now = Date()
+        let monthInterval = calendar.dateInterval(of: .month, for: selectedMonth)
+        let startOfMonth = monthInterval?.start ?? selectedMonth
+        let endOfMonth = monthInterval?.end ?? selectedMonth
+        let endOfToday = calendar.dateInterval(of: .day, for: now)?.end ?? now
+        let isCurrentMonth = calendar.isDate(selectedMonth, equalTo: now, toGranularity: .month)
+        let upperBound = isCurrentMonth ? endOfToday : endOfMonth
+
+        // 仅统计 [本月起, 今日结束) 区间内的分类数据
+        let items = scheduleStore.scheduleItems.filter {
+            $0.startTime >= startOfMonth && $0.startTime < upperBound
         }
         
         // 获取所有分类的统计数据
