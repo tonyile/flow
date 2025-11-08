@@ -1,6 +1,4 @@
 import SwiftUI
-import AVFoundation
-import AudioToolbox
 import Foundation
 
 struct AddScheduleView: View {
@@ -35,7 +33,6 @@ struct AddScheduleView: View {
     @State private var reminderSound: ReminderSound = .gentleAlarm
     @State private var customSoundURL: URL?
     @State private var isShowingSoundSelection = false
-    @State private var audioPlayer: AVAudioPlayer?
     
 
     
@@ -84,17 +81,6 @@ struct AddScheduleView: View {
         (60, "1小时前"),
         (120, "2小时前"),
         (1440, "1天前")
-    ]
-    
-    private let soundOptions = [
-        ("default", "默认"),
-        ("bell", "铃声"),
-        ("chime", "钟声"),
-        ("ding", "叮咚"),
-        ("note", "音符"),
-        ("ping", "提示音"),
-        ("pop", "弹出音"),
-        ("tweet", "鸟鸣")
     ]
     
     init(scheduleStore: ScheduleStore, baseDate: Date = Date()) {
@@ -374,9 +360,9 @@ struct AddScheduleView: View {
                 }
                 #endif
             }
-            .onTapGesture {
-                hideKeyboard()
-            }
+            .simultaneousGesture(
+                TapGesture().onEnded { hideKeyboard() }
+            )
             .sheet(isPresented: $isShowingSoundSelection) {
                 SoundSelectionView(
                     selectedSound: $reminderSound,

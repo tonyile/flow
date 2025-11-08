@@ -25,10 +25,6 @@ enum ReminderSound: String, Codable, CaseIterable, Identifiable {
     case digitalAlarm = "digital_alarm"
     case gentleAlarm = "gentle_alarm"
     case urgentAlarm = "urgent_alarm"
-    case bell = "bell"
-    case chime = "chime"
-    case ding = "ding"
-    case note = "note"
     case longMelody = "long_melody"
     // 已移除：extended_alarm / peaceful_chime / nature_sounds（向后兼容在解码中处理）
     // 新增四首音乐
@@ -37,20 +33,30 @@ enum ReminderSound: String, Codable, CaseIterable, Identifiable {
     case freshMorning = "fresh_morning"
     case birdsChirping = "birds_chirping"
     case custom = "custom"
+
+    // 自定义展示顺序并排除默认项（默认由“轻柔闹铃”替代）
+    static var allCases: [ReminderSound] = [
+        .gentleAlarm,
+        .classicAlarm,
+        .digitalAlarm,
+        .urgentAlarm,
+        .longMelody,
+        .doodoo,
+        .morningBell,
+        .freshMorning,
+        .birdsChirping,
+        .custom
+    ]
     
     var id: String { rawValue }
     
     var displayName: String {
         switch self {
-        case .defaultSound: return "默认"
+        case .defaultSound: return "轻柔闹铃"
         case .classicAlarm: return "经典闹铃"
         case .digitalAlarm: return "数字闹铃"
         case .gentleAlarm: return "轻柔闹铃"
         case .urgentAlarm: return "紧急闹铃"
-        case .bell: return "铃铛"
-        case .chime: return "钟声"
-        case .ding: return "叮咚"
-        case .note: return "音符"
         case .longMelody: return "悠长旋律"
         case .doodoo: return "嘟嘟嘟嘟"
         case .morningBell: return "晨钟暮鼓"
@@ -67,10 +73,6 @@ enum ReminderSound: String, Codable, CaseIterable, Identifiable {
         case .digitalAlarm: return "digital_alarm"
         case .gentleAlarm: return "gentle_alarm"
         case .urgentAlarm: return "urgent_alarm"
-        case .bell: return "bell"
-        case .chime: return "chime"
-        case .ding: return "ding"
-        case .note: return "note"
         case .longMelody: return "long_melody"
         case .doodoo: return "嘟嘟嘟嘟"
         case .morningBell: return "晨钟暮鼓"
@@ -87,15 +89,11 @@ enum ReminderSound: String, Codable, CaseIterable, Identifiable {
         case .digitalAlarm: return "deskclock"
         case .gentleAlarm: return "bell.and.waves.left.and.right"
         case .urgentAlarm: return "exclamationmark.triangle"
-        case .bell: return "bell"
-        case .chime: return "bell.and.waves.left.and.right"
-        case .ding: return "bell.circle"
-        case .note: return "music.note"
-        case .longMelody: return "music.note.list"
-        case .doodoo: return "music.note"
-        case .morningBell: return "music.note"
-        case .freshMorning: return "music.note"
-        case .birdsChirping: return "music.note"
+        case .longMelody: return "music.quarternote.3"
+        case .doodoo: return "waveform"
+        case .morningBell: return "bell.circle"
+        case .freshMorning: return "sunrise"
+        case .birdsChirping: return "bird"
         case .custom: return "music.note.list"
         }
     }
@@ -114,6 +112,8 @@ enum ReminderSound: String, Codable, CaseIterable, Identifiable {
             self = .longMelody // 迁移到悠长旋律
         case "peaceful_chime", "nature_sounds":
             self = .defaultSound // 回退到默认提示音
+        case "bell", "chime", "ding", "note":
+            self = .gentleAlarm // 已移除旧值映射到轻柔闹铃
         default:
             self = .defaultSound
         }
@@ -440,7 +440,12 @@ extension ScheduleItem {
         item.reminderTime = record["reminderTime"] as? Date
         item.reminderMinutesBefore = record["reminderMinutesBefore"] as? Int ?? 15
         if let soundRawValue = record["reminderSound"] as? String {
-            item.reminderSound = ReminderSound(rawValue: soundRawValue) ?? .defaultSound
+            switch soundRawValue {
+            case "bell", "chime", "ding", "note":
+                item.reminderSound = .gentleAlarm // 旧值迁移到轻柔闹铃
+            default:
+                item.reminderSound = ReminderSound(rawValue: soundRawValue) ?? .defaultSound
+            }
         }
         item.modifiedDate = record["modifiedDate"] as? Date ?? Date()
         item.isDeleted = record["isDeleted"] as? Bool ?? false

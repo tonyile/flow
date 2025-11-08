@@ -29,9 +29,7 @@ struct SoundSelectionView: View {
                                     selectedSound = sound
                                     playSound(sound)
                                 },
-                                onPlay: {
-                                    playSound(sound)
-                                }
+                                onPlay: nil
                             )
                         }
                     }
@@ -45,17 +43,8 @@ struct SoundSelectionView: View {
                                 selectedSound = .custom
                                 isShowingDocumentPicker = true
                             },
-                            onPlay: customSoundURL != nil ? {
-                                playCustomSound()
-                            } : nil
+                            onPlay: nil
                         )
-                        
-                        if selectedSound == .custom && customSoundURL != nil {
-                            Button("播放自定义音乐") {
-                                playCustomSound()
-                            }
-                            .foregroundColor(.blue)
-                        }
                     }
                 }
             }
@@ -72,6 +61,12 @@ struct SoundSelectionView: View {
             Text("macOS上暂不支持自定义音乐文件选择")
                 .padding()
             #endif
+        }
+        .onAppear {
+            // 若当前为旧数据的“默认”，进入选择页后直接切换为“轻柔闹铃”
+            if selectedSound == .defaultSound {
+                selectedSound = .gentleAlarm
+            }
         }
     }
 
