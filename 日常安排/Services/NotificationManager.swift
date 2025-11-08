@@ -107,13 +107,15 @@ class NotificationManager: ObservableObject {
         } else {
             // 使用系统铃声（优先使用更高保真 wav）
             if let systemSoundName = item.reminderSound.systemSoundName {
-                // 先尝试 wav
+                // 先尝试 wav（兼容 Sounds 子目录）
                 let wavName = "\(systemSoundName).wav"
-                if Bundle.main.url(forResource: systemSoundName, withExtension: "wav") != nil {
+                if Bundle.main.url(forResource: systemSoundName, withExtension: "wav") != nil
+                    || Bundle.main.url(forResource: systemSoundName, withExtension: "wav", subdirectory: "Sounds") != nil {
                     content.sound = UNNotificationSound(named: UNNotificationSoundName(wavName))
                     print("🔔 🔊 使用系统铃声: \(wavName)")
-                } else if Bundle.main.url(forResource: systemSoundName, withExtension: "caf") != nil {
-                    // 兼容可能存在的 caf 资源
+                } else if Bundle.main.url(forResource: systemSoundName, withExtension: "caf") != nil
+                            || Bundle.main.url(forResource: systemSoundName, withExtension: "caf", subdirectory: "Sounds") != nil {
+                    // 兼容可能存在的 caf 资源（支持 Sounds 子目录）
                     let cafName = "\(systemSoundName).caf"
                     content.sound = UNNotificationSound(named: UNNotificationSoundName(cafName))
                     print("🔔 🔊 使用系统铃声: \(cafName)")
@@ -347,10 +349,12 @@ class NotificationManager: ObservableObject {
                     content.sound = UNNotificationSound(named: UNNotificationSoundName(soundName))
                 } else if let systemSoundName = item.reminderSound.systemSoundName {
                     // 与上文保持一致的扩展选择逻辑（优先 wav）
-                    if Bundle.main.url(forResource: systemSoundName, withExtension: "wav") != nil {
+                    if Bundle.main.url(forResource: systemSoundName, withExtension: "wav") != nil
+                        || Bundle.main.url(forResource: systemSoundName, withExtension: "wav", subdirectory: "Sounds") != nil {
                         let wavName = "\(systemSoundName).wav"
                         content.sound = UNNotificationSound(named: UNNotificationSoundName(wavName))
-                    } else if Bundle.main.url(forResource: systemSoundName, withExtension: "caf") != nil {
+                    } else if Bundle.main.url(forResource: systemSoundName, withExtension: "caf") != nil
+                                || Bundle.main.url(forResource: systemSoundName, withExtension: "caf", subdirectory: "Sounds") != nil {
                         let cafName = "\(systemSoundName).caf"
                         content.sound = UNNotificationSound(named: UNNotificationSoundName(cafName))
                     } else {

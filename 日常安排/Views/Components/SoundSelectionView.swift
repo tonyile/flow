@@ -107,9 +107,11 @@ struct SoundSelectionView: View {
         
         guard let soundName = sound.systemSoundName else { return }
         
-        // 统一使用 URL 方式，优先使用更高保真 wav，再尝试 caf；兼容 Sounds 子目录
+        // 统一使用 URL 方式，优先使用更高保真 wav，其次 flac，最后 caf；兼容 Sounds 子目录
         let url = Bundle.main.url(forResource: soundName, withExtension: "wav")
             ?? Bundle.main.url(forResource: soundName, withExtension: "wav", subdirectory: "Sounds")
+            ?? Bundle.main.url(forResource: soundName, withExtension: "flac")
+            ?? Bundle.main.url(forResource: soundName, withExtension: "flac", subdirectory: "Sounds")
             ?? Bundle.main.url(forResource: soundName, withExtension: "caf")
             ?? Bundle.main.url(forResource: soundName, withExtension: "caf", subdirectory: "Sounds")
 
