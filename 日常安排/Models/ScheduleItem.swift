@@ -25,14 +25,12 @@ enum ReminderSound: String, Codable, CaseIterable, Identifiable {
     case digitalAlarm = "digital_alarm"
     case gentleAlarm = "gentle_alarm"
     case urgentAlarm = "urgent_alarm"
-    case extendedAlarm = "extended_alarm"
     case bell = "bell"
     case chime = "chime"
     case ding = "ding"
     case note = "note"
     case longMelody = "long_melody"
-    case peacefulChime = "peaceful_chime"
-    case natureSounds = "nature_sounds"
+    // 已移除：extended_alarm / peaceful_chime / nature_sounds（向后兼容在解码中处理）
     // 新增四首音乐
     case doodoo = "dududu"
     case morningBell = "morning_bell"
@@ -49,14 +47,11 @@ enum ReminderSound: String, Codable, CaseIterable, Identifiable {
         case .digitalAlarm: return "数字闹铃"
         case .gentleAlarm: return "轻柔闹铃"
         case .urgentAlarm: return "紧急闹铃"
-        case .extendedAlarm: return "加长闹铃"
         case .bell: return "铃铛"
         case .chime: return "钟声"
         case .ding: return "叮咚"
         case .note: return "音符"
         case .longMelody: return "悠长旋律"
-        case .peacefulChime: return "平和钟声"
-        case .natureSounds: return "自然之声"
         case .doodoo: return "嘟嘟嘟嘟"
         case .morningBell: return "晨钟暮鼓"
         case .freshMorning: return "清新晨光"
@@ -72,14 +67,11 @@ enum ReminderSound: String, Codable, CaseIterable, Identifiable {
         case .digitalAlarm: return "digital_alarm"
         case .gentleAlarm: return "gentle_alarm"
         case .urgentAlarm: return "urgent_alarm"
-        case .extendedAlarm: return "long_melody_trim" // 调整为更欢快的加长铃声
         case .bell: return "bell"
         case .chime: return "chime"
         case .ding: return "ding"
         case .note: return "note"
         case .longMelody: return "long_melody"
-        case .peacefulChime: return "peaceful_chime"
-        case .natureSounds: return "nature_sounds"
         case .doodoo: return "嘟嘟嘟嘟"
         case .morningBell: return "晨钟暮鼓"
         case .freshMorning: return "清新晨光"
@@ -95,20 +87,41 @@ enum ReminderSound: String, Codable, CaseIterable, Identifiable {
         case .digitalAlarm: return "deskclock"
         case .gentleAlarm: return "bell.and.waves.left.and.right"
         case .urgentAlarm: return "exclamationmark.triangle"
-        case .extendedAlarm: return "alarm.waves.left.and.right"
         case .bell: return "bell"
         case .chime: return "bell.and.waves.left.and.right"
         case .ding: return "bell.circle"
         case .note: return "music.note"
         case .longMelody: return "music.note.list"
-        case .peacefulChime: return "bell.and.waveform"
-        case .natureSounds: return "leaf"
         case .doodoo: return "music.note"
         case .morningBell: return "music.note"
         case .freshMorning: return "music.note"
         case .birdsChirping: return "music.note"
         case .custom: return "music.note.list"
         }
+    }
+
+    // 自定义解码以兼容被移除的旧枚举值，防止崩溃
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let value = try container.decode(String.self)
+        if let sound = ReminderSound(rawValue: value) {
+            self = sound
+            return
+        }
+        // 旧值映射与兜底
+        switch value {
+        case "extended_alarm":
+            self = .longMelody // 迁移到悠长旋律
+        case "peaceful_chime", "nature_sounds":
+            self = .defaultSound // 回退到默认提示音
+        default:
+            self = .defaultSound
+        }
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(self.rawValue)
     }
 }
 
