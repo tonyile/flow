@@ -33,6 +33,11 @@ enum ReminderSound: String, Codable, CaseIterable, Identifiable {
     case longMelody = "long_melody"
     case peacefulChime = "peaceful_chime"
     case natureSounds = "nature_sounds"
+    // 新增四首音乐
+    case doodoo = "dududu"
+    case morningBell = "morning_bell"
+    case freshMorning = "fresh_morning"
+    case birdsChirping = "birds_chirping"
     case custom = "custom"
     
     var id: String { rawValue }
@@ -44,7 +49,7 @@ enum ReminderSound: String, Codable, CaseIterable, Identifiable {
         case .digitalAlarm: return "数字闹铃"
         case .gentleAlarm: return "轻柔闹铃"
         case .urgentAlarm: return "紧急闹铃"
-        case .extendedAlarm: return "花之舞"
+        case .extendedAlarm: return "加长闹铃"
         case .bell: return "铃铛"
         case .chime: return "钟声"
         case .ding: return "叮咚"
@@ -52,6 +57,10 @@ enum ReminderSound: String, Codable, CaseIterable, Identifiable {
         case .longMelody: return "悠长旋律"
         case .peacefulChime: return "平和钟声"
         case .natureSounds: return "自然之声"
+        case .doodoo: return "嘟嘟嘟嘟"
+        case .morningBell: return "晨钟暮鼓"
+        case .freshMorning: return "清新晨光"
+        case .birdsChirping: return "鸟语花香"
         case .custom: return "自定义"
         }
     }
@@ -71,6 +80,10 @@ enum ReminderSound: String, Codable, CaseIterable, Identifiable {
         case .longMelody: return "long_melody"
         case .peacefulChime: return "peaceful_chime"
         case .natureSounds: return "nature_sounds"
+        case .doodoo: return "嘟嘟嘟嘟"
+        case .morningBell: return "晨钟暮鼓"
+        case .freshMorning: return "清新晨光"
+        case .birdsChirping: return "鸟语花香"
         case .custom: return nil // 自定义音乐需要用户选择
         }
     }
@@ -90,6 +103,10 @@ enum ReminderSound: String, Codable, CaseIterable, Identifiable {
         case .longMelody: return "music.note.list"
         case .peacefulChime: return "bell.and.waveform"
         case .natureSounds: return "leaf"
+        case .doodoo: return "music.note"
+        case .morningBell: return "music.note"
+        case .freshMorning: return "music.note"
+        case .birdsChirping: return "music.note"
         case .custom: return "music.note.list"
         }
     }
