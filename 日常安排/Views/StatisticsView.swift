@@ -15,7 +15,6 @@ struct StatisticsView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                header
                 completionSection
                 categorySection
             }
@@ -27,6 +26,18 @@ struct StatisticsView: View {
             Color.clear.frame(height: 100)
         }
         .navigationTitle("统计")
+        .toolbar {
+            ToolbarItem(placement: .principal) {
+                Text(monthFormatter.string(from: selectedMonth))
+                    .font(.system(.title2, design: .default, weight: .semibold))
+                    .foregroundColor(.primary)
+                    .minimumScaleFactor(0.8)
+                    .lineLimit(1)
+                    .allowsTightening(true)
+                    .truncationMode(.tail)
+                    .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+            }
+        }
         .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("StatisticsMonthSwitchGesture"))) { notification in
             if let direction = notification.userInfo?["direction"] as? Int {
                 shiftMonth(direction)

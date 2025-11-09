@@ -474,6 +474,14 @@ struct AddScheduleView: View {
                 item.recurringEndDate = endDate
                 item.recurringWeekdays = Array(selectedWeekdays)
                 item.parentId = parentId
+
+                // 设置提醒（此前遗漏导致多天日程未保存提醒开关）
+                item.hasReminder = hasReminder
+                if hasReminder {
+                    item.reminderMinutesBefore = reminderMinutesBefore
+                    item.reminderSound = reminderSound
+                    item.customSoundURL = customSoundURL
+                }
                 
                 scheduleStore.addSchedule(item)
             }

@@ -123,11 +123,17 @@ struct FlowView: View {
                 
                 Spacer()
         }
-        .navigationTitle("日常流水")
+        .navigationTitle("")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
         .toolbar {
+            // 自定义居中标题，参考前面的页面样式
+            ToolbarItem(placement: .principal) {
+                Text("日常流水")
+                    .font(.system(.title2, design: .default, weight: .semibold))
+                    .foregroundColor(.primary)
+            }
             #if os(iOS)
             ToolbarItem(placement: .navigationBarTrailing) {
                 AnimatedPlusButton {

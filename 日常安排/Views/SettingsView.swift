@@ -448,7 +448,15 @@ struct SettingsView: View {
                 }
                 .listRowSeparator(.hidden)
             }
-            .navigationTitle("设置")
+            .navigationTitle("日程管理")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            
+            // 顶部增加少许安全区间距，避免首个分区标题被遮挡
+            .safeAreaInset(edge: .top) {
+                Color.clear.frame(height: 10)
+            }
             // 从系统设置返回时，刷新通知授权状态以更新UI
             .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
                 notificationManager.checkAuthorizationStatus()
