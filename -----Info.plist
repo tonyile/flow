@@ -8,7 +8,7 @@
 	<array>
 		<string>processing</string>
 		<string>fetch</string>
-		<string>background-notification</string>
+		<string>remote-notification</string>
 		<string>audio</string>
 	</array>
 	<key>NSUserNotificationsUsageDescription</key>
