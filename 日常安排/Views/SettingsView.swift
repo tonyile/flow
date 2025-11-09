@@ -426,7 +426,7 @@ struct SettingsView: View {
                         }
                         Text("版本")
                         Spacer()
-                        Text("1.0.0")
+                        Text("V3.00")
                             .foregroundColor(.secondary)
                     }
                     

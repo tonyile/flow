@@ -190,7 +190,7 @@ struct DayView: View {
 
     private var dayFormatter: DateFormatter {
         let df = DateFormatter()
-        df.dateFormat = "M月d日"  // 统一使用不显示年份的格式
+        df.dateFormat = "yyyy年M月d日"  // 在 DayView 显示完整年月日
         df.locale = Locale(identifier: "zh_CN")
         return df
     }

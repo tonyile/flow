@@ -59,7 +59,7 @@ struct CustomTabBar: View {
                 .background(
             Rectangle()
                 .foregroundStyle(.ultraThinMaterial)
-                .opacity(1.0)
+                .opacity(0.6)
         )
         .cornerRadius(28)
         .padding(.horizontal, 20)

@@ -462,14 +462,30 @@ struct EditScheduleView: View {
     }
     
     private func updateUnifiedSchedules() {
-        // 创建更新后的日程模板
+        // 使用当前选择的时间（小时/分钟），统一修改会保留各自日期
+        let calendar = Calendar.current
+        let newStartTime = calendar.date(
+            bySettingHour: calendar.component(.hour, from: startTime),
+            minute: calendar.component(.minute, from: startTime),
+            second: 0,
+            of: scheduleDate
+        ) ?? scheduleDate
+
+        let newEndTime = calendar.date(
+            bySettingHour: calendar.component(.hour, from: endTime),
+            minute: calendar.component(.minute, from: endTime),
+            second: 0,
+            of: scheduleDate
+        ) ?? scheduleDate
+
+        // 创建更新后的日程模板（用于统一修改：提取小时/分钟）
         var updatedSchedule = ScheduleItem(
             title: title,
             notes: notes,
             category: category,
             priority: priority,
-            startTime: scheduleItem.startTime, // 保持原始时间，统一修改方法会处理
-            endTime: scheduleItem.endTime,
+            startTime: newStartTime,
+            endTime: newEndTime,
             isCompleted: scheduleItem.isCompleted
         )
         
@@ -481,8 +497,26 @@ struct EditScheduleView: View {
         updatedSchedule.customSoundURL = hasReminder ? customSoundURL : nil
         updatedSchedule.parentId = scheduleItem.parentId
         
-        // 调用统一修改方法
+        // 先统一更新（统一时间与基础信息，保留各自日期）
         scheduleStore.updateUnifiedSchedules(updatedSchedule)
+
+        // 如为多天重复系列，则同步整个系列的日期范围（包含当天）
+        if isMultiDay {
+            var seriesUpdate = updatedSchedule
+            seriesUpdate.isRecurring = true
+            seriesUpdate.recurringStartDate = scheduleDate
+            seriesUpdate.recurringEndDate = endDate
+            seriesUpdate.recurringWeekdays = Array(selectedWeekdays)
+            seriesUpdate.parentId = scheduleItem.parentId ?? scheduleItem.id
+            scheduleStore.updateRecurringScheduleSeries(seriesUpdate)
+        } else {
+            // 非重复：若日期变化，更新当前实例日期
+            let originalDay = Calendar.current.startOfDay(for: scheduleItem.startTime)
+            let newDay = Calendar.current.startOfDay(for: scheduleDate)
+            if originalDay != newDay {
+                updateSingleScheduleWithDateChange()
+            }
+        }
     }
     
     private func createRecurringScheduleSeries() {

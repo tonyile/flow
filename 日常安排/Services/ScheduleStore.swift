@@ -260,7 +260,22 @@ class ScheduleStore: ObservableObject {
     
     /// 统一修改所有相同名称和时间点的日程
     func updateUnifiedSchedules(_ updatedSchedule: ScheduleItem) {
-        let unifiedSchedules = findUnifiedSchedules(for: updatedSchedule)
+        // 优先根据“原始时间”定位统一修改的集合，避免因更改时间导致找不到集合
+        let calendar = Calendar.current
+        let originalItem = scheduleItems.first(where: { $0.id == updatedSchedule.id })
+        let unifiedSchedules: [ScheduleItem]
+        if let originalItem = originalItem {
+            let targetHour = calendar.component(.hour, from: originalItem.startTime)
+            let targetMinute = calendar.component(.minute, from: originalItem.startTime)
+            unifiedSchedules = scheduleItems.filter { item in
+                item.title.lowercased() == originalItem.title.lowercased() &&
+                calendar.component(.hour, from: item.startTime) == targetHour &&
+                calendar.component(.minute, from: item.startTime) == targetMinute
+            }
+        } else {
+            // 回退到基于更新后时间的查找
+            unifiedSchedules = findUnifiedSchedules(for: updatedSchedule)
+        }
         
         for schedule in unifiedSchedules {
             var modifiedSchedule = schedule
@@ -276,7 +291,6 @@ class ScheduleStore: ObservableObject {
         modifiedSchedule.customSoundURL = updatedSchedule.customSoundURL
             
             // 更新时间，但保持原有的日期
-            let calendar = Calendar.current
             let originalDateComponents = calendar.dateComponents([.year, .month, .day], from: schedule.startTime)
             let newTimeComponents = calendar.dateComponents([.hour, .minute, .second], from: updatedSchedule.startTime)
             
@@ -1000,8 +1014,8 @@ class ScheduleStore: ObservableObject {
         createRecurringScheduleSeries(item)
     }
     
-    // 更新重复日程系列
-    private func updateRecurringScheduleSeries(_ updatedItem: ScheduleItem) {
+    // 更新重复日程系列（对外公开，供视图调用）
+    func updateRecurringScheduleSeries(_ updatedItem: ScheduleItem) {
         print("🔄 开始更新重复日程系列：\(updatedItem.title)")
         print("🔄 更新前总数：\(scheduleItems.count)")
         
