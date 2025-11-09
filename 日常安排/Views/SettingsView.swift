@@ -30,8 +30,7 @@ struct SettingsView: View {
 
     
     var body: some View {
-        NavigationStack {
-            Form {
+        Form {
                 // 通知设置
                 Section(header: Text("通知设置")) {
                     HStack {
@@ -481,7 +480,6 @@ struct SettingsView: View {
                 Text(duplicateCleanupResult ?? "")
             }
         }
-    }
     
     private func requestNotificationPermission() {
         Task {

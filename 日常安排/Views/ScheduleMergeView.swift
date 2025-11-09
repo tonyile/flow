@@ -18,7 +18,7 @@ struct ScheduleMergeView: View {
     }
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack {
                 if suggestedSchedules.isEmpty {
                     ContentUnavailableView(

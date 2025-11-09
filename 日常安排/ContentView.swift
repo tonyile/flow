@@ -5,28 +5,31 @@ struct ContentView: View {
     @EnvironmentObject var colorSchemeManager: ColorSchemeManager
 
     var body: some View {
-        ZStack(alignment: .bottom) {
-            TabView(selection: $selectedTab) {
-                DayView(scheduleStore: ScheduleStore.shared)
-                    .tag(TabBarItem.time)
-                WeekView(scheduleStore: ScheduleStore.shared)
-                    .tag(TabBarItem.week)
-                MonthView(scheduleStore: ScheduleStore.shared)
-                    .tag(TabBarItem.month)
-                FlowView()
-                    .tag(TabBarItem.flow)
-                StatisticsView(scheduleStore: ScheduleStore.shared)
-                    .tag(TabBarItem.statistics)
-                SettingsView(scheduleStore: ScheduleStore.shared)
-                    .tag(TabBarItem.settings)
-            }
-            .tabViewStyle(.page(indexDisplayMode: .never))
-            .ignoresSafeArea(.all, edges: .bottom)
+        NavigationStack {
+            ZStack(alignment: .bottom) {
+                TabView(selection: $selectedTab) {
+                    DayView(scheduleStore: ScheduleStore.shared)
+                        .tag(TabBarItem.time)
+                    WeekView(scheduleStore: ScheduleStore.shared)
+                        .tag(TabBarItem.week)
+                    MonthView(scheduleStore: ScheduleStore.shared)
+                        .tag(TabBarItem.month)
+                    FlowView()
+                        .tag(TabBarItem.flow)
+                    StatisticsView(scheduleStore: ScheduleStore.shared)
+                        .tag(TabBarItem.statistics)
+                    SettingsView(scheduleStore: ScheduleStore.shared)
+                        .tag(TabBarItem.settings)
+                }
+                .tabViewStyle(.page(indexDisplayMode: .never))
+                .ignoresSafeArea(.all, edges: .bottom)
 
-            CustomTabBar(selectedTab: $selectedTab)
-                .padding(.bottom, 1)
+                CustomTabBar(selectedTab: $selectedTab)
+                    .ignoresSafeArea(.container, edges: .bottom)
+                    .padding(.bottom, -6)
+            }
+            .ignoresSafeArea(.keyboard)
         }
-        .ignoresSafeArea(.keyboard)
     }
 }
 

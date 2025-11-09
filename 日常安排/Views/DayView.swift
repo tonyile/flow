@@ -41,6 +41,10 @@ struct DayView: View {
                     }
                 }
             }
+            // 顶部位置微调：为导航栏下方留出 8pt 空间
+            .safeAreaInset(edge: .top) {
+                Color.clear.frame(height: 8)
+            }
         }
         .sheet(isPresented: $showAdd) {
             AddScheduleView(scheduleStore: scheduleStore, baseDate: selectedDate)

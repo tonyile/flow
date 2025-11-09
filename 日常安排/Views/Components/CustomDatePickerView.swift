@@ -151,7 +151,7 @@ struct DatePickerMonthYearView: View {
     }
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack {
                 HStack {
                     // 年份选择器

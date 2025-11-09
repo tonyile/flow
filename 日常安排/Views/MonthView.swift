@@ -243,47 +243,37 @@ struct MonthView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            GeometryReader { geometry in
-                VStack(spacing: 6) {  // 减少整体间距从12到6
-                    weekdayHeader
-                    grid
-                        .padding(.horizontal, 4)  // 减少水平边距从8到4
-                    Spacer(minLength: 0)  // 设置最小长度为0，减少底部留白
-                }
-                .padding(.top, 8)  // 减少顶部边距从16到8
-                .safeAreaInset(edge: .bottom) {
-                    // 为底部导航栏预留空间
-                    Color.clear.frame(height: 100)
-                }
+        GeometryReader { geometry in
+            VStack(spacing: 6) {  // 减少整体间距从12到6
+                weekdayHeader
+                grid
+                    .padding(.horizontal, 4)  // 减少水平边距从8到4
+                Spacer(minLength: 0)  // 设置最小长度为0，减少底部留白
             }
-            .navigationTitle("")
-        #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
-        #endif
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    Button {
-                        showingMonthPicker = true
-                    } label: {
-                        Text(monthFormatter.string(from: currentMonth))
-                            .font(.system(.title2, design: .default, weight: .semibold))
-                            .foregroundColor(colorSchemeManager.primary)
-                    }
-                }
-                ToolbarItem(placement: .automatic) {
-                    HStack(spacing: 8) {
-                        // 添加按钮 - 动感多彩小圆圈
-                        AnimatedPlusButton {
-                            // 使用当前选中的日期，如果没有选中则使用今天
-                            let dateForAdd = selectedDate ?? Date()
-                            dateForDetail = dateForAdd
-                            showingDateDetail = true
-                        }
-                    }
+            .padding(.top, 8)  // 减少顶部边距从16到8
+            .safeAreaInset(edge: .bottom) {
+                // 为底部导航栏预留空间
+                Color.clear.frame(height: 100)
+            }
+        }
+        .navigationTitle("")
+    #if os(iOS)
+    .navigationBarTitleDisplayMode(.inline)
+    #endif
+        .toolbar {
+            ToolbarItem(placement: .principal) {
+                Button {
+                    showingMonthPicker = true
+                } label: {
+                    Text(monthFormatter.string(from: currentMonth))
+                        .font(.system(.title2, design: .default, weight: .semibold))
+                        .foregroundColor(colorSchemeManager.primary)
                 }
             }
         }
+        // 使导航栏背景在滚动过渡时保持一致，避免工具栏项重复渲染
+        .toolbarBackground(.visible, for: .navigationBar)
+        .toolbarBackground(colorSchemeManager.background, for: .navigationBar)
         .alert("删除日程", isPresented: $showingDeleteAlert) {
             Button("取消", role: .cancel) { }
             Button("删除", role: .destructive) {

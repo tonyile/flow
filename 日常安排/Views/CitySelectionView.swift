@@ -60,7 +60,7 @@ struct CitySelectionView: View {
     }
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack {
                 // 搜索框
                 SearchBar(text: $searchText)

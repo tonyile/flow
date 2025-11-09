@@ -31,27 +31,13 @@ struct WeekView: View {
                         weekTitleView
                     }
                 }
-                #if os(iOS)
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    HStack(spacing: 8) {
-                        // 添加按钮 - 动感多彩小圆圈
-                        AnimatedPlusButton {
-                            selectedDateForAdd = Date()
-                            showAdd = true
-                        }
-                    }
-                }
-                #else
-                ToolbarItem(placement: .primaryAction) {
-                    HStack(spacing: 8) {
-                        // 添加按钮 - 动感多彩小圆圈
-                        AnimatedPlusButton {
-                            selectedDateForAdd = Date()
-                            showAdd = true
-                        }
-                    }
-                }
-                #endif
+            }
+            // 固定导航栏背景以避免滚动时工具栏项重复
+            .toolbarBackground(.visible, for: .navigationBar)
+            .toolbarBackground(colorSchemeManager.background, for: .navigationBar)
+            // 顶部位置微调：为导航栏下方留出 8pt 空间
+            .safeAreaInset(edge: .top) {
+                Color.clear.frame(height: 8)
             }
         }
         .sheet(isPresented: $showAdd) {
@@ -61,7 +47,7 @@ struct WeekView: View {
             EditScheduleView(scheduleItem: editingItem, scheduleStore: scheduleStore)
         }
         .sheet(isPresented: $showCalendar) {
-            NavigationView {
+            NavigationStack {
                 CustomCalendarView(selectedDate: .constant(selectedWeekStart))
                     .navigationTitle("选择日期")
                     #if os(iOS)

@@ -60,8 +60,7 @@ struct FlowView: View {
     }
     
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 0) {
+        VStack(spacing: 0) {
                 // 搜索栏
                 FlowSearchBar(text: $searchText)
                     .padding(.horizontal)
@@ -123,38 +122,37 @@ struct FlowView: View {
                 }
                 
                 Spacer()
-            }
-            .navigationTitle("日常流水")
+        }
+        .navigationTitle("日常流水")
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+        #endif
+        .toolbar {
             #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
+            ToolbarItem(placement: .navigationBarTrailing) {
+                AnimatedPlusButton {
+                    showingAddFlow = true
+                }
+            }
+            #else
+            ToolbarItem(placement: .primaryAction) {
+                AnimatedPlusButton {
+                    showingAddFlow = true
+                }
+            }
             #endif
-            .toolbar {
-                #if os(iOS)
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    AnimatedPlusButton {
-                        showingAddFlow = true
-                    }
-                }
-                #else
-                ToolbarItem(placement: .primaryAction) {
-                    AnimatedPlusButton {
-                        showingAddFlow = true
-                    }
-                }
-                #endif
-            }
-            .sheet(isPresented: $showingAddFlow) {
-                AddFlowView()
-            }
-            .sheet(item: $selectedFlowItem) { item in
-                EditFlowView(flowItem: item)
-            }
-            .sheet(isPresented: $showingFilterSheet) {
-                FilterSheetView(
-                    selectedType: $selectedType,
-                    selectedDateRange: $selectedDateRange
-                )
-            }
+        }
+        .sheet(isPresented: $showingAddFlow) {
+            AddFlowView()
+        }
+        .sheet(item: $selectedFlowItem) { item in
+            EditFlowView(flowItem: item)
+        }
+        .sheet(isPresented: $showingFilterSheet) {
+            FilterSheetView(
+                selectedType: $selectedType,
+                selectedDateRange: $selectedDateRange
+            )
         }
         .alert("错误", isPresented: .constant(flowStore.errorMessage != nil)) {
             Button("确定") {

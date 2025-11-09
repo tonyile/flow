@@ -99,7 +99,7 @@ struct AddScheduleView: View {
     }
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Form {
                 Section(header: Text("基本信息")) {
                     TextField("标题", text: $title)
