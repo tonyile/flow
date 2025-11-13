@@ -448,11 +448,19 @@ struct SettingsView: View {
                 }
                 .listRowSeparator(.hidden)
             }
-            .navigationTitle("日程管理")
+        
+            .navigationTitle("")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
-            
+            .toolbar {
+                // 自定义居中标题，参考前面的页面样式
+                //ToolbarItem(placement: .principal) {
+                //    Text("设置管理")
+                //        .font(.system(.title2, design: .default, weight: .semibold))
+                //        .foregroundColor(.primary)
+                //}
+            }
             // 顶部增加少许安全区间距，避免首个分区标题被遮挡
             .safeAreaInset(edge: .top) {
                 Color.clear.frame(height: 10)
