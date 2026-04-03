@@ -66,20 +66,29 @@ enum ReminderSound: String, Codable, CaseIterable, Identifiable {
         }
     }
     
-    var systemSoundName: String? {
+    /// 主 Bundle / Sounds 内音频文件的候选基名（无扩展名）：优先英文 `rawValue`，兼容历史中文文件名资源
+    var bundleSoundBaseNameCandidates: [String] {
         switch self {
-        case .defaultSound: return nil // 使用系统默认
-        case .classicAlarm: return "classic_alarm"
-        case .digitalAlarm: return "digital_alarm"
-        case .gentleAlarm: return "gentle_alarm"
-        case .urgentAlarm: return "urgent_alarm"
-        case .longMelody: return "long_melody"
-        case .doodoo: return "嘟嘟嘟嘟"
-        case .morningBell: return "晨钟暮鼓"
-        case .freshMorning: return "清新晨光"
-        case .birdsChirping: return "鸟语花香"
-        case .custom: return nil // 自定义音乐需要用户选择
+        case .defaultSound, .custom: return []
+        case .morningBell: return ["morning_bell", "晨钟暮鼓"]
+        case .doodoo: return ["dududu", "嘟嘟嘟嘟"]
+        case .freshMorning: return ["fresh_morning", "清新晨光"]
+        case .birdsChirping: return ["birds_chirping", "鸟语花香"]
+        default: return [rawValue]
         }
+    }
+
+    /// 在 Bundle 中查找首个匹配的 wav/caf（含 `Sounds` 子目录）
+    func firstBundleSoundURL() -> URL? {
+        for base in bundleSoundBaseNameCandidates {
+            if let url = Bundle.main.url(forResource: base, withExtension: "wav")
+                ?? Bundle.main.url(forResource: base, withExtension: "wav", subdirectory: "Sounds")
+                ?? Bundle.main.url(forResource: base, withExtension: "caf")
+                ?? Bundle.main.url(forResource: base, withExtension: "caf", subdirectory: "Sounds") {
+                return url
+            }
+        }
+        return nil
     }
     
     var icon: String {
@@ -278,7 +287,7 @@ struct ScheduleItem: Identifiable, Codable {
     var reminderTime: Date?
     var reminderMinutesBefore: Int = 15 // 提前多少分钟提醒
     var notificationId: String? // 本地通知ID
-    var reminderSound: ReminderSound = .gentleAlarm // 提醒音乐（默认轻柔闹铃）
+    var reminderSound: ReminderSound = .morningBell // 提醒音乐（默认晨钟暮鼓）
     var customSoundURL: URL? // 自定义音乐文件路径
     
     // 城市相关属性
@@ -303,6 +312,23 @@ struct ScheduleItem: Identifiable, Codable {
         // 为新创建的日程生成通知ID
         self.notificationId = "schedule_\(self.id.uuidString)"
     }
+
+    /// 日历意义上的结束时间。同一天内若结束钟点早于开始钟点，视为跨到次日该时刻结束（如 22:00 → 次日 02:00）。
+    var effectiveEndTime: Date {
+        let cal = Calendar.current
+        if cal.isDate(endTime, inSameDayAs: startTime), endTime < startTime {
+            return cal.date(byAdding: .day, value: 1, to: endTime) ?? endTime
+        }
+        return endTime
+    }
+
+    /// 是否与 `day` 所在公历日有交集（跨天日程在中间日期也应出现）
+    func intersectsCalendarDay(_ day: Date) -> Bool {
+        let cal = Calendar.current
+        let dayStart = cal.startOfDay(for: day)
+        guard let dayEndExclusive = cal.date(byAdding: .day, value: 1, to: dayStart) else { return false }
+        return startTime < dayEndExclusive && effectiveEndTime > dayStart
+    }
     
     // 计算当前计划的状态
     var status: ScheduleStatus {
@@ -313,13 +339,13 @@ struct ScheduleItem: Identifiable, Codable {
             return .completed
         }
         
-        // 如果已过期（结束时间已过），返回过期状态
-        if endTime < now {
+        // 如果已过期（按有效结束时间判断，避免跨天/凌晨结束被误判）
+        if effectiveEndTime < now {
             return .overdue
         }
         
-        // 如果正在进行中（开始时间已过，结束时间未过）
-        if startTime <= now && endTime >= now {
+        // 如果正在进行中（开始时间已过，有效结束时间未过）
+        if startTime <= now && effectiveEndTime >= now {
             return .inProgress
         }
         

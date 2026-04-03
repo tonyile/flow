@@ -63,9 +63,9 @@ struct SoundSelectionView: View {
             #endif
         }
         .onAppear {
-            // 若当前为旧数据的“默认”，进入选择页后直接切换为“轻柔闹铃”
+            // 若当前为旧数据的“默认”，进入选择页后直接切换为“晨钟暮鼓”
             if selectedSound == .defaultSound {
-                selectedSound = .gentleAlarm
+                selectedSound = .morningBell
             }
         }
     }
@@ -110,15 +110,7 @@ struct SoundSelectionView: View {
             return
         }
         
-        guard let soundName = sound.systemSoundName else { return }
-        
-        // 统一使用 URL 方式，优先使用更高保真 wav，其次 caf；兼容 Sounds 子目录
-        let url = Bundle.main.url(forResource: soundName, withExtension: "wav")
-            ?? Bundle.main.url(forResource: soundName, withExtension: "wav", subdirectory: "Sounds")
-            ?? Bundle.main.url(forResource: soundName, withExtension: "caf")
-            ?? Bundle.main.url(forResource: soundName, withExtension: "caf", subdirectory: "Sounds")
-
-        if let url = url {
+        if let url = sound.firstBundleSoundURL() {
             playAudioFile(at: url)
         } else {
             AudioServicesPlaySystemSound(1007)
@@ -298,6 +290,11 @@ struct DocumentPicker: UIViewControllerRepresentable {
             // 复制文件到应用的 Library/Sounds 目录（通知支持从此目录加载）
             let libraryURL = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask)[0]
             let soundsDir = libraryURL.appendingPathComponent("Sounds", isDirectory: true)
+
+            let didAccess = url.startAccessingSecurityScopedResource()
+            defer {
+                if didAccess { url.stopAccessingSecurityScopedResource() }
+            }
 
             do {
                 // 创建 Sounds 目录（如不存在）

@@ -1278,9 +1278,8 @@ class ScheduleStore: ObservableObject {
     }
     
     func schedulesForDate(_ date: Date) -> [ScheduleItem] {
-        let calendar = Calendar.current
-        let filteredSchedules = self.scheduleItems.filter { 
-            calendar.isDate($0.startTime, inSameDayAs: date)
+        let filteredSchedules = self.scheduleItems.filter {
+            $0.intersectsCalendarDay(date)
         }.sorted { $0.startTime < $1.startTime }
         
         print("📅 查询日期 \(date) 的日程，找到 \(filteredSchedules.count) 个")
@@ -1314,9 +1313,9 @@ class ScheduleStore: ObservableObject {
     
     
     var todayItemsCount: Int {
-        let today = Calendar.current.startOfDay(for: Date())
+        let today = Date()
         return self.scheduleItems.filter { item in
-            Calendar.current.isDate(item.startTime, inSameDayAs: today)
+            item.intersectsCalendarDay(today)
         }.count
     }
     

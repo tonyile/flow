@@ -115,30 +115,15 @@ class NotificationManager: ObservableObject {
             let soundName = customURL.lastPathComponent
             content.sound = UNNotificationSound(named: UNNotificationSoundName(soundName))
             print("🔔 🔊 使用自定义音乐: \(soundName)")
+        } else if let url = item.reminderSound.firstBundleSoundURL() {
+            content.sound = UNNotificationSound(named: UNNotificationSoundName(url.lastPathComponent))
+            print("🔔 🔊 使用系统铃声: \(url.lastPathComponent)")
+        } else if !item.reminderSound.bundleSoundBaseNameCandidates.isEmpty {
+            content.sound = .default
+            print("🔔 ⚠️ 未找到铃声音频资源，回退默认: \(item.reminderSound.bundleSoundBaseNameCandidates.joined(separator: ", "))")
         } else {
-            // 使用系统铃声（优先使用更高保真 wav）
-            if let systemSoundName = item.reminderSound.systemSoundName {
-                // 先尝试 wav（兼容 Sounds 子目录）
-                let wavName = "\(systemSoundName).wav"
-                if Bundle.main.url(forResource: systemSoundName, withExtension: "wav") != nil
-                    || Bundle.main.url(forResource: systemSoundName, withExtension: "wav", subdirectory: "Sounds") != nil {
-                    content.sound = UNNotificationSound(named: UNNotificationSoundName(wavName))
-                    print("🔔 🔊 使用系统铃声: \(wavName)")
-                } else if Bundle.main.url(forResource: systemSoundName, withExtension: "caf") != nil
-                            || Bundle.main.url(forResource: systemSoundName, withExtension: "caf", subdirectory: "Sounds") != nil {
-                    // 兼容可能存在的 caf 资源（支持 Sounds 子目录）
-                    let cafName = "\(systemSoundName).caf"
-                    content.sound = UNNotificationSound(named: UNNotificationSoundName(cafName))
-                    print("🔔 🔊 使用系统铃声: \(cafName)")
-                } else {
-                    // 找不到匹配资源，回退默认
-                    content.sound = .default
-                    print("🔔 ⚠️ 未找到铃声音频资源，回退默认: \(systemSoundName)")
-                }
-            } else {
-                content.sound = .default
-                print("🔔 🔊 使用默认通知声音")
-            }
+            content.sound = .default
+            print("🔔 🔊 使用默认通知声音")
         }
         
         content.badge = 1
@@ -352,6 +337,13 @@ class NotificationManager: ObservableObject {
                 content.categoryIdentifier = "UPCOMING_SCHEDULE"
                 content.badge = 1
 
+                // 时效性提醒配置（iOS 15+，真机有效）
+                let recommendedContent = DeviceNotificationHelper.shared.getRecommendedNotificationContent()
+                if #available(iOS 15.0, *) {
+                    content.interruptionLevel = recommendedContent.interruptionLevel
+                    content.relevanceScore = recommendedContent.relevanceScore
+                }
+
                 // 声音沿用原提醒设置
                 if item.reminderSound == .defaultSound {
                     // 默认提示音调整为轻柔闹铃（gentle_alarm），优先 wav 其次 caf
@@ -367,20 +359,11 @@ class NotificationManager: ObservableObject {
                 } else if item.reminderSound == .custom, let customURL = item.customSoundURL {
                     let soundName = customURL.lastPathComponent
                     content.sound = UNNotificationSound(named: UNNotificationSoundName(soundName))
-                } else if let systemSoundName = item.reminderSound.systemSoundName {
-                    // 与上文保持一致的扩展选择逻辑（优先 wav）
-                    if Bundle.main.url(forResource: systemSoundName, withExtension: "wav") != nil
-                        || Bundle.main.url(forResource: systemSoundName, withExtension: "wav", subdirectory: "Sounds") != nil {
-                        let wavName = "\(systemSoundName).wav"
-                        content.sound = UNNotificationSound(named: UNNotificationSoundName(wavName))
-                    } else if Bundle.main.url(forResource: systemSoundName, withExtension: "caf") != nil
-                                || Bundle.main.url(forResource: systemSoundName, withExtension: "caf", subdirectory: "Sounds") != nil {
-                        let cafName = "\(systemSoundName).caf"
-                        content.sound = UNNotificationSound(named: UNNotificationSoundName(cafName))
-                    } else {
-                        content.sound = .default
-                        print("🔔 ⚠️ 周年提醒未找到铃声音频资源，回退默认: \(systemSoundName)")
-                    }
+                } else if let url = item.reminderSound.firstBundleSoundURL() {
+                    content.sound = UNNotificationSound(named: UNNotificationSoundName(url.lastPathComponent))
+                } else if !item.reminderSound.bundleSoundBaseNameCandidates.isEmpty {
+                    content.sound = .default
+                    print("🔔 ⚠️ 周年提醒未找到铃声音频资源，回退默认: \(item.reminderSound.bundleSoundBaseNameCandidates.joined(separator: ", "))")
                 } else {
                     content.sound = .default
                 }
@@ -480,7 +463,7 @@ class NotificationManager: ObservableObject {
 
         // 生成已过期的计划摘要（到下一次触发时间为止）
         let overdueSchedules = schedules.filter { item in
-            !item.isCompleted && item.endTime < nextDate
+            !item.isCompleted && item.effectiveEndTime < nextDate
         }
         let count = overdueSchedules.count
         let topTitles = overdueSchedules.prefix(3).map { $0.title }
@@ -561,13 +544,11 @@ class NotificationManager: ObservableObject {
     // 检查已过期的计划（只检查当日的）
     func checkOverdueSchedules(schedules: [ScheduleItem]) async -> [ScheduleItem] {
         let now = Date()
-        let calendar = Calendar.current
-        let today = calendar.startOfDay(for: now)
         
         let overdueSchedules = schedules.filter { schedule in
-            !schedule.isCompleted && 
-            schedule.endTime < now &&
-            calendar.isDate(schedule.startTime, inSameDayAs: today)
+            !schedule.isCompleted &&
+            schedule.effectiveEndTime < now &&
+            schedule.intersectsCalendarDay(now)
         }
         
         if !overdueSchedules.isEmpty {
@@ -594,6 +575,13 @@ class NotificationManager: ObservableObject {
         content.sound = .default
         content.badge = 1
         content.categoryIdentifier = "UPCOMING_SCHEDULE"
+
+        // 时效性提醒配置（iOS 15+，真机有效）
+        let recommendedContent = DeviceNotificationHelper.shared.getRecommendedNotificationContent()
+        if #available(iOS 15.0, *) {
+            content.interruptionLevel = recommendedContent.interruptionLevel
+            content.relevanceScore = recommendedContent.relevanceScore
+        }
         
         // 添加通知图标附件
         if let iconURL = Bundle.main.url(forResource: "notification_icon", withExtension: "png") {
@@ -644,6 +632,13 @@ class NotificationManager: ObservableObject {
         content.sound = .default
         content.badge = NSNumber(value: count)
         content.categoryIdentifier = "OVERDUE_SCHEDULE"
+
+        // 时效性提醒配置（iOS 15+，真机有效）
+        let recommendedContent = DeviceNotificationHelper.shared.getRecommendedNotificationContent()
+        if #available(iOS 15.0, *) {
+            content.interruptionLevel = recommendedContent.interruptionLevel
+            content.relevanceScore = recommendedContent.relevanceScore
+        }
         
         // 添加通知图标附件
         if let iconURL = Bundle.main.url(forResource: "notification_icon", withExtension: "png") {
@@ -810,6 +805,13 @@ class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
         content.body = title
         content.sound = .default
         content.badge = 1
+
+        // 时效性提醒配置（iOS 15+，真机有效）
+        let recommendedContent = DeviceNotificationHelper.shared.getRecommendedNotificationContent()
+        if #available(iOS 15.0, *) {
+            content.interruptionLevel = recommendedContent.interruptionLevel
+            content.relevanceScore = recommendedContent.relevanceScore
+        }
         
         // 添加通知图标附件
         if let iconURL = Bundle.main.url(forResource: "notification_icon", withExtension: "png") {

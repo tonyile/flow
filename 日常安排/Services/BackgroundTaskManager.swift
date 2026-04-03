@@ -221,7 +221,7 @@ class BackgroundTaskManager: ObservableObject {
         let tomorrow = calendar.date(byAdding: .day, value: 1, to: today)!
         
         let todaySchedules = scheduleStore.scheduleItems.filter { item in
-            calendar.isDate(item.startTime, inSameDayAs: today) && !item.isCompleted
+            item.intersectsCalendarDay(today) && !item.isCompleted
         }
         
         let upcomingSchedules = scheduleStore.scheduleItems.filter { item in
@@ -239,8 +239,8 @@ class BackgroundTaskManager: ObservableObject {
         // 检查过期的计划（只检查当日的）
         let overdueSchedules = scheduleStore.scheduleItems.filter { schedule in
             !schedule.isCompleted &&
-            schedule.endTime < Date() &&
-            calendar.isDate(schedule.startTime, inSameDayAs: today)
+            schedule.effectiveEndTime < Date() &&
+            schedule.intersectsCalendarDay(today)
         }
         
         print("⏱️ 15分钟内计划: \(soonSchedules.count)个，过期计划: \(overdueSchedules.count)个")
