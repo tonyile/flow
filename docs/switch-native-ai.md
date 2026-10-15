@@ -1,6 +1,6 @@
 # 主力交换机原生 AI 功能收集
 
-收集日期：2026-10-12。对象是华为 CloudEngine、Cisco Catalyst / N9000、HPE Aruba CX 与 HPE Juniper、Arista EOS。材料来自各厂商公开配置指南、数据手册和新闻稿，不是实验室实测，也不是按具体订单的许可矩阵。
+收集日期：2026-10-12。对象是华为 CloudEngine、Cisco Catalyst / N9000、HPE Aruba CX 与 HPE Juniper、Arista EOS。材料来自各厂商公开配置指南、数据手册和新闻稿，不是实验室实测，也不是按具体订单的许可矩阵。按技术链收拢后的对照见 `docs/native-ai-integration.md`。
 
 这里的“原生”只指推理或自适应计算发生在交换机自身的操作系统、交换芯片或板载 CPU/GPU 上。控制器、分析器和分析云上的 AI 单独列出，避免和本机功能混在一起。
 
